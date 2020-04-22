@@ -5,12 +5,15 @@ import cn.tianyu.tins.type.Token;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Lexer {
 
     String src;
     int position = 0;
     int line = 1, col = 0;
+    List<Token> list = new LinkedList<>();
 
     public Lexer(String fileName) {
         readFile(fileName);
@@ -22,11 +25,14 @@ public class Lexer {
     public void readFile(String fileName) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
-            String line;
             StringBuilder builder = new StringBuilder();
+            String line;
             while ((line = reader.readLine()) != null) {
-                builder.append(line);
+                // readLine函数不读入换行符，需要自己添加
+                builder.append(line).append('\n');
             }
+            // 减去最后一个换行符
+            builder.deleteCharAt(builder.length() - 1);
             src = builder.toString();
         } catch (IOException e) {
             e.printStackTrace();
@@ -45,8 +51,28 @@ public class Lexer {
             return 0;
     }
 
+    public Token peek() {
+        if (list.isEmpty()) {
+            list.add(next());
+        }
+        return list.get(0);
+    }
+
+    public void back(Token token) {
+        list.add(token);
+    }
+
     public Token next() {
+        if (!list.isEmpty()) {
+            return list.remove(0);
+        }
+
         Token token = new Token();
+        if (position >= src.length()) {
+            token.type = Token.Type.END;
+            return token;
+        }
+
         char c;
         while (((c = charAt(position++)) == ' ' || c == '\t')) {
             col++;
@@ -64,7 +90,7 @@ public class Lexer {
                 c = charAt(++position);
             }
             String name = src.substring(oldPosition, position);
-            token.type = getTokenType(name);
+            token.type = checkTokenType(name);
             if (token.type == Token.Type.IDENTIFIER)
                 token.name = name;
         } else if (Character.isDigit(c)) {
@@ -164,10 +190,12 @@ public class Lexer {
             token.type = Token.Type.SINGLE_QUOTATION;
         } else if (c == '\n') {
             token.type = Token.Type.NEWLINE;
+            // 遇到换行符时，oldPosition还停留在换行符，计算col时，会将换行符也算上，所以此处往后移动一个字符
+            oldPosition++;
             line++;
             col = 0;
         } else {
-            System.err.println(String.format("lex error at line %d:%d, unexpected char: %c(%d)\n", line, col, charAt(oldPosition), (int) charAt(oldPosition)));
+            System.err.println(String.format("lex error at line %d:%d, unexpected char: %c(%d)", line, col, charAt(oldPosition), (int) charAt(oldPosition)));
             System.exit(-1);
         }
         col += position - oldPosition + 1;
@@ -223,11 +251,12 @@ public class Lexer {
     /**
      * 得到一个标识符的类型，是标识符还是关键字
      */
-    private Token.Type getTokenType(String identifier) {
+    private Token.Type checkTokenType(String identifier) {
         int start = Token.Type.INT.ordinal();
         int end = Token.Type.THIS.ordinal();
         for (int i = start; i <= end; i++) {
-            if (Token.Type.values()[i].name().equals(identifier))
+            String keyword = Token.Type.values()[i].name().toLowerCase();
+            if (keyword.equals(identifier))
                 return Token.Type.values()[i];
         }
         return Token.Type.IDENTIFIER;

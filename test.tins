@@ -1,0 +1,29 @@
+struct Compose {
+    string name
+}
+
+struct Circle {
+    double center
+    double radius
+    Struct Compose
+
+    double area() {
+        return this.center * this.radius
+    }
+}
+
+void main() {
+    int a = 1
+
+    string[] x = {"1", "2", "3"}
+
+    Circle[] arr = {circle1, circle2}
+
+    float[3] arr2
+
+    print(getOne())
+}
+
+int getOne() {
+    return 1
+}
