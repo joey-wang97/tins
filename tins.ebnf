@@ -1,0 +1,8 @@
+program -> importStmt | varDef | structDef | funcDef
+
+varDef -> TYPE ID = expr | arrDef
+structDef -> STRUCT id { varDef, funcDef, structDef }
+funcDef -> funcHead { funcBody }
+funcHead -> TYPE id (funcParam)
+funcBody -> varDef | stmt
+stmt -> ifStmt | whileStmt | forStmt | switchStmt | breakStmt | continueStmt | returnStmt | expr | emptyStmt

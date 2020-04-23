@@ -1,15 +1,12 @@
 package cn.tianyu.tins;
 
-import cn.tianyu.tins.type.Token;
+import cn.tianyu.tins.ast.TopDefNode;
 
 public class Main {
 
     public static void main(String[] args) {
-        Lexer lexer = new Lexer("test.tins");
-        Token token = lexer.next();
-        while (token.type != Token.Type.END) {
-            System.out.println(token.type.name());
-            token = lexer.next();
-        }
+        Parser parser = new Parser("test1.tins");
+        TopDefNode ast = parser.parser();
+        ast.print();
     }
 }

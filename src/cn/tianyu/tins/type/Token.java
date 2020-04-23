@@ -27,6 +27,7 @@ public class Token {
         IF,
         ELSE,
         MAIN,
+        IMPORT,
         THIS,
         // 基本运算
         ADD,

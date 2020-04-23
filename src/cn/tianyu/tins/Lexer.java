@@ -22,7 +22,7 @@ public class Lexer {
     /**
      * 直接读取文件内容到src
      */
-    public void readFile(String fileName) {
+    private void readFile(String fileName) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
             StringBuilder builder = new StringBuilder();
@@ -51,6 +51,19 @@ public class Lexer {
             return 0;
     }
 
+    public void unexpectedToken(Token.Type unexpectedType) {
+        error("unexpected token type: " + unexpectedType.name());
+    }
+
+    public void unexpectedToken(Token.Type unexpectedType, Token.Type expectedType) {
+        error("unexpected token type: " + unexpectedType.name() + ", expected is: " + expectedType.name());
+    }
+
+    public void error(String str) {
+        System.err.println(String.format("at line %d:%d, %s", line, col, str));
+        System.exit(-1);
+    }
+
     public Token peek() {
         if (list.isEmpty()) {
             list.add(next());
@@ -59,7 +72,15 @@ public class Lexer {
     }
 
     public void back(Token token) {
-        list.add(token);
+        list.add(0, token);
+    }
+
+    public Token match(Token.Type type) {
+        Token token = next();
+        if (token.type != type) {
+            unexpectedToken(token.type, type);
+        }
+        return token;
     }
 
     public Token next() {
