@@ -1,8 +1,8 @@
-program -> importStmt | varDef | structDef | funcDef
-
-varDef -> TYPE ID = expr | arrDef
-structDef -> STRUCT id { varDef, funcDef, structDef }
-funcDef -> funcHead { funcBody }
-funcHead -> TYPE id (funcParam)
-funcBody -> varDef | stmt
+program = importStmt | varDefStmt | funcDef
+importStmt = IMPORT ID.ID.ID
+varDef -> TYPE ID | TYPE[] ID = expr
+structDef -> STRUCT ID { varDef, funcDef }
+funcDef -> TYPE ID funcParam funcBody
+funcParam = ( TYPE ID, TYPE ID)
+funcBody -> stmt
 stmt -> ifStmt | whileStmt | forStmt | switchStmt | breakStmt | continueStmt | returnStmt | expr | emptyStmt
