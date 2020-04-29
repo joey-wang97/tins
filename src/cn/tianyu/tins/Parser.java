@@ -40,8 +40,20 @@ public class Parser {
         return top;
     }
 
-    private boolean endOfLine(Token.Type type) {
+    private boolean isLineEnd(Token.Type type) {
         return type == Token.Type.NEWLINE || type == Token.Type.END;
+    }
+
+    /**
+     * 判断接下来是函数定义还是变量定义
+     */
+    private boolean isFunc() {
+        Token token = lexer.next();
+        Token id = lexer.match(Token.Type.IDENTIFIER);
+        Token third = lexer.peek();
+        lexer.back(id);
+        lexer.back(token);
+        return third.type == Token.Type.LPARENT;
     }
 
     private ImportNode importStmt() {
@@ -51,7 +63,7 @@ public class Parser {
             Token id = lexer.match(Token.Type.IDENTIFIER);
             importNode.folders.add(id.name);
             Token label = lexer.next();
-            if (endOfLine(label.type))
+            if (isLineEnd(label.type))
                 break;
             else if (label.type != Token.Type.DOT)
                 lexer.unexpectedToken(label.type, Token.Type.DOT);
@@ -63,19 +75,17 @@ public class Parser {
         StructDefNode structDefNode = new StructDefNode();
         lexer.match(Token.Type.STRUCT);
         Token name = lexer.match(Token.Type.IDENTIFIER);
+        structDefNode.name = name.name;
         lexer.match(Token.Type.LBRACE);
-        Token token = lexer.next();
-        Token id = lexer.match(Token.Type.IDENTIFIER);
-        Token third = lexer.peek();
-        lexer.back(id);
-        lexer.back(token);
-        // 根据第三个token是不是左括号进入函数定义
-        if (third.type == Token.Type.LPARENT) {
+        lexer.match(Token.Type.NEWLINE);
+
+        if (isFunc()) {
             structDefNode.funcDefNodes.add(funcDef());
         } else {
             structDefNode.varDefNodes.addAll(varDefs());
         }
         lexer.match(Token.Type.RBRACE);
+        goNextLine();
         return structDefNode;
     }
 
@@ -95,7 +105,7 @@ public class Parser {
         List<VarDefNode> list = new ArrayList<>();
         Token varType = lexer.next();
         // 遇到左括号，为数组，将左右括号都next掉
-        boolean isArr=false;
+        boolean isArr = false;
         if (lexer.peek().type == Token.Type.LBRACKET) {
             lexer.next();
             lexer.match(Token.Type.RBRACKET);
@@ -107,7 +117,8 @@ public class Parser {
             varDefNode.isArr = isArr;
             varDefNode.name = lexer.match(Token.Type.IDENTIFIER).name;
             Token label = lexer.next();
-            if (label.type == Token.Type.NEWLINE) {
+            if (isLineEnd(label.type)) {
+                list.add(varDefNode);
                 break;
             } else if (label.type == Token.Type.COMMA) {
                 continue;
@@ -167,5 +178,11 @@ public class Parser {
         while (token.type != Token.Type.NEWLINE)
             token = lexer.next();
         return null;
+    }
+
+    private void goNextLine() {
+        Token token = lexer.next();
+        if (token.type != Token.Type.NEWLINE && token.type != Token.Type.END)
+            lexer.unexpectedToken(token.type);
     }
 }

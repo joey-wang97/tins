@@ -5,4 +5,8 @@ package cn.tianyu.tins.ast;
  */
 public class StmtNode extends Node{
 
+    @Override
+    public void print(int indent) {
+        super.print(indent);
+    }
 }

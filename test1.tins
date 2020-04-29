@@ -1,1 +1,4 @@
 import a.b
+struct Compose {
+    string name
+}
