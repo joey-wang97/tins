@@ -1,21 +1,39 @@
-struct Compose {
-    string name
-}
+import a b
+
+struct empty{ }
+
+struct Compose { string name }
 
 struct Circle {
     double center
     double radius
     Struct Compose
 
-    double area() {
+    double area(int a) {
         return this.center * this.radius
     }
-}
 
-void main() {
+    void test(int a[], int b[]) {
+        return 0
+    }
+
+    void test2(int a, int b) {
+        return 0
+    }
+}
+int a
+int b
+int c int d
+
+func main() {
     int a = 1
 
     string[] x = {"1", "2", "3"}
+    Circle circle1 = {1.0, 2.0}
+    Circle circle2 = {
+        center: 1.0,
+        radius: 2.0
+    }
 
     Circle[] arr = {circle1, circle2}
 
@@ -24,6 +42,6 @@ void main() {
     print(getOne())
 }
 
-int getOne() {
+func int getOne() {
     return 1
 }

@@ -8,18 +8,14 @@ import cn.tianyu.tins.type.Token;
 public class VarDefNode extends Node {
 
     public Token varType;
-    public String name;
+    public String varName;
     public boolean isArr;
     public Object value;
 
     @Override
-    public void print(int indent) {
-        super.print(indent);
-        System.out.println("var type:" + varType.type.name());
-        super.print(indent);
-        System.out.println("var type name:" + varType.name);
-        print(indent, "var name: " + name);
-        print(indent, "isArr:" + isArr);
-        print(indent, "value:" + value);
+    public void dump(int indent) {
+        String varTypeName = varType.name == null ? varType.type.name() : varType.name;
+        dump(indent, "var " + varTypeName +" " + varName + (isArr ? "[]" : ""));
+        dump(indent, "value:" + value);
     }
 }

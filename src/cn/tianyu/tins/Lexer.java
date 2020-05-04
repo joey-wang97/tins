@@ -13,6 +13,9 @@ public class Lexer {
     String src;
     int position = 0;
     int line = 1, col = 0;
+    /**
+     * 只存放非换行符
+     */
     List<Token> list = new LinkedList<>();
 
     public Lexer(String fileName) {
@@ -60,8 +63,7 @@ public class Lexer {
     }
 
     public void error(String str) {
-        System.err.println(String.format("at line %d:%d, %s", line, col, str));
-        System.exit(-1);
+        throw new RuntimeException(String.format("at line %d:%d, %s", line, col, str));
     }
 
     public Token peek() {
@@ -71,7 +73,20 @@ public class Lexer {
         return list.get(0);
     }
 
+    /**
+     * 忽略换行符，取一个token
+     */
+    public Token peekIgnoreLineBreak() {
+        if (list.isEmpty()) {
+            list.add(nextIgnoreLineBreak());
+        }
+        return list.get(0);
+    }
+
     public void back(Token token) {
+        if (token.type == Token.Type.LINE_BREAK) {
+            error("can't back token of line break");
+        }
         list.add(0, token);
     }
 
@@ -83,6 +98,29 @@ public class Lexer {
         return token;
     }
 
+    public Token matchIgnoreLineBreak(Token.Type type) {
+        Token token = nextIgnoreLineBreak();
+        if (token.type != type) {
+            unexpectedToken(token.type, type);
+        }
+        return token;
+    }
+
+    /**
+     * 返回不包括换行符的token
+     * 遇到换行符则继续
+     */
+    public Token nextIgnoreLineBreak() {
+        Token token = next();
+        while (token.type == Token.Type.LINE_BREAK) {
+            token = next();
+        }
+        return token;
+    }
+
+    /**
+     * 返回所有类型的token，包括换行符
+     */
     public Token next() {
         if (!list.isEmpty()) {
             return list.remove(0);
@@ -188,29 +226,31 @@ public class Lexer {
         } else if (c == '^') {
             token.type = Token.Type.BXOR;
         } else if (c == '{') {
-            token.type = Token.Type.LBRACE;
+            token.type = Token.Type.L_CURLY_BRACKET;
         } else if (c == '}') {
-            token.type = Token.Type.RBRACE;
+            token.type = Token.Type.R_CURLY_BRACKET;
         } else if (c == '[') {
-            token.type = Token.Type.LBRACKET;
+            token.type = Token.Type.L_SQUARE_BRACKET;
         } else if (c == ']') {
-            token.type = Token.Type.RBRACKET;
+            token.type = Token.Type.R_SQUARE_BRACKET;
         } else if (c == '(') {
-            token.type = Token.Type.LPARENT;
+            token.type = Token.Type.OPEN_PARENTHESIS;
         } else if (c == ')') {
-            token.type = Token.Type.RPARENT;
+            token.type = Token.Type.CLOSE_PARENTHESIS;
         } else if (c == ';') {
             token.type = Token.Type.SEMICOLON;
         } else if (c == ',') {
             token.type = Token.Type.COMMA;
         } else if (c == '.') {
             token.type = Token.Type.DOT;
+        } else if (c == ':') {
+            token.type = Token.Type.COLON;
         } else if (c == '"') {
             token.type = Token.Type.DOUBLE_QUOTATION;
         } else if (c == '\'') {
             token.type = Token.Type.SINGLE_QUOTATION;
         } else if (c == '\n') {
-            token.type = Token.Type.NEWLINE;
+            token.type = Token.Type.LINE_BREAK;
             // 遇到换行符时，oldPosition还停留在换行符，计算col时，会将换行符也算上，所以此处往后移动一个字符
             oldPosition++;
             line++;

@@ -21,11 +21,16 @@ public class Token {
         DOUBLE,
         VOID,
         STRUCT,
+        FUNC,
         RETURN,
         WHILE,
         FOR,
         IF,
         ELSE,
+        SWITCH,
+        CASE,
+        DEFAULT,
+        BREAK,
         MAIN,
         IMPORT,
         THIS,
@@ -55,19 +60,25 @@ public class Token {
         LSH,
         RSH,
         ASSIGN,
-        // 左右花括号, 左右圆括号(parenthesis)，左右方括号，点，分号，逗号，单双引号
-        LBRACE,
-        RBRACE,
-        LPARENT,
-        RPARENT,
-        LBRACKET,
-        RBRACKET,
+        // 左右花括号, ，左右方括号，点，分号，逗号，单双引号
+        L_CURLY_BRACKET,
+        R_CURLY_BRACKET,
+        // 左右圆括号
+        OPEN_PARENTHESIS,
+        CLOSE_PARENTHESIS,
+        // 左右方括号
+        L_SQUARE_BRACKET,
+        R_SQUARE_BRACKET,
         DOT,
+        // 分号
         SEMICOLON,
+        // 冒号
+        COLON,
         COMMA,
+        // 单双引号
         SINGLE_QUOTATION,
         DOUBLE_QUOTATION,
-        NEWLINE,
+        LINE_BREAK,
         // 结束符
         END
     }

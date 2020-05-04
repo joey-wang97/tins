@@ -10,8 +10,8 @@ public class ImportNode extends Node {
 
     public List<String> folders = new LinkedList<>();
 
-    public void print(int indent) {
-        super.print(indent);
+    public void dump(int indent) {
+        printIndent(indent);
         folders.forEach(i -> System.out.print(i + " "));
         System.out.println();
     }

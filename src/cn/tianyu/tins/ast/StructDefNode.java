@@ -12,11 +12,12 @@ public class StructDefNode extends Node {
     public List<FuncDefNode> funcDefNodes = new ArrayList<>();
 
     @Override
-    public void print(int indent) {
-        print(indent, "struct name: " + name);
-        print(indent, "struct var def:");
-        varDefNodes.forEach(i -> i.print(indent + super.indent));
-        print(indent, "struct func def:");
-        funcDefNodes.forEach(i -> i.print(indent + super.indent));
+    public void dump(int indent) {
+        dump(indent, "struct name: " + name);
+        dump(indent, "struct var def:");
+        varDefNodes.forEach(i -> i.dump(indent + Node.INDENT));
+        dump(indent, "struct func def:");
+        funcDefNodes.forEach(i -> i.dump(indent + Node.INDENT));
+        System.out.println();
     }
 }

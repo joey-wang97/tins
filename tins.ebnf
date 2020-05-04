@@ -1,8 +1,13 @@
 program = importStmt | varDefStmt | funcDef
-importStmt = IMPORT ID.ID.ID
+
+# import语句不可换行
+importStmt -> IMPORT ID.ID.ID
 varDef -> TYPE ID | TYPE[] ID = expr
 structDef -> STRUCT ID { varDef, funcDef }
 funcDef -> TYPE ID funcParam funcBody
 funcParam = ( TYPE ID, TYPE ID)
 funcBody -> stmt
 stmt -> ifStmt | whileStmt | forStmt | switchStmt | breakStmt | continueStmt | returnStmt | expr | emptyStmt
+
+# expr不可换行
+expr ->
