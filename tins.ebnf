@@ -10,4 +10,53 @@ funcBody -> stmt
 stmt -> ifStmt | whileStmt | forStmt | switchStmt | breakStmt | continueStmt | returnStmt | expr | emptyStmt
 
 # expr不可换行
-expr ->
+expr -> assignExpr
+assignExpr -> factorExpr OP_ASSIGN assignExpr
+            | condExpr
+字符串运算的+=特殊处理
+OP_ASSIGN -> = | += | -= | *= | /= | %= | &= | '|=' | ^= | <<= | >>=
+condExpr -> logicExpr ? assignExpr : condExpr
+            | logicOrExpr
+logicOrExpr -> loginOrExpr || loginAndExpr
+            | loginAndExpr
+logicAndExpr -> logicAndExpr && bitOrExpr
+            | bitOrExpr
+bitOrExpr -> bitOrExpr | bitXorExpr
+            | bitXorExpr
+bitXorExpr -> bitXorExpr ^ bitAndExpr
+            | bitAndExpr
+bitAndExpr -> bitAndExpr & equalityExpr
+            | equalityExpr
+equalityExpr -> equalityExpr == relationExpr
+            | equalityExpr != relationExpr
+            | relationExpr
+relationExpr -> shiftExpr > shiftExpr
+            | shiftExpr >= shiftExpr
+            | shiftExpr < shiftExpr
+            | shiftExpr <= shiftExpr
+            | shiftExpr
+shiftExpr -> shiftExpr << addOrSubExpr
+            | shiftExpr >> addOrSubExpr
+            | addOrSubExpr
+addOrSubExpr -> addOrSubExpr + mulOrDivExpr 字符串运算特殊处理
+            | addOrSubExpr - mulOrDivExpr
+            | mulOrDivExpr
+mulOrDivExpr -> mulOrDivExpr * suffixUnaryExpr
+            | mulOrDivExpr / suffixUnaryExpr
+            | suffixUnaryExpr
+suffixUnaryExpr -> unaryExpr ++
+            | unaryExpr --
+            | unaryExpr
+unaryExpr -> - factorExpr 取负数
+            | ~ factorExpr 按位取反
+            | ++ factorExpr
+            | -- factorExpr
+            | ! factorExpr
+            | (TYPE) unaryExpr 类型转换表达式，可递归
+            | factorExpr
+factorExpr -> factorExpr.ID
+            | factorExpr[expr]
+            | ID
+            | NUM | STRING | CHAR 各种常量
+            | CALL_FUNC
+            | (expr)

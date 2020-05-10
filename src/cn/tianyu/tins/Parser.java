@@ -318,6 +318,6 @@ public class Parser {
             }
             token = lexer.peekIgnoreLineBreak();
         }
-        return  switchStmt;
+        return switchStmt;
     }
 }
