@@ -13,8 +13,10 @@ stmt -> ifStmt | whileStmt | forStmt | switchStmt | breakStmt | continueStmt | r
 expr -> assignExpr
 assignExpr -> factorExpr OP_ASSIGN assignExpr
             | condExpr
+
 字符串运算的+=特殊处理
 OP_ASSIGN -> = | += | -= | *= | /= | %= | &= | '|=' | ^= | <<= | >>=
+
 condExpr -> logicExpr ? assignExpr : condExpr
             | logicOrExpr
 logicOrExpr -> loginOrExpr || loginAndExpr
