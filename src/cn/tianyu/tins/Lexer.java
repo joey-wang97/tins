@@ -212,19 +212,19 @@ public class Lexer {
                 token.type = Token.Type.NE;
             }
         } else if (c == '|') {
-            token.type = Token.Type.BOR;
+            token.type = Token.Type.B_OR;
             if (charAt(position) == '|') {
                 position++;
                 token.type = Token.Type.OR;
             }
         } else if (c == '&') {
-            token.type = Token.Type.BAND;
+            token.type = Token.Type.B_AND;
             if (charAt(position) == '&') {
                 position++;
                 token.type = Token.Type.AND;
             }
         } else if (c == '^') {
-            token.type = Token.Type.BXOR;
+            token.type = Token.Type.B_XOR;
         } else if (c == '{') {
             token.type = Token.Type.L_CURLY_BRACKET;
         } else if (c == '}') {

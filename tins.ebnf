@@ -9,15 +9,17 @@ funcParam = ( TYPE ID, TYPE ID)
 funcBody -> stmt
 stmt -> ifStmt | whileStmt | forStmt | switchStmt | breakStmt | continueStmt | returnStmt | expr | emptyStmt
 
-# expr不可换行
+# 表达式解析
 expr -> assignExpr
-assignExpr -> factorExpr OP_ASSIGN assignExpr
+# todo assignExpr -> factorExpr OP_ASSIGN assignExpr
+
+assignExpr -> condExpr OP_ASSIGN assignExpr #偷个懒
             | condExpr
 
 字符串运算的+=特殊处理
 OP_ASSIGN -> = | += | -= | *= | /= | %= | &= | '|=' | ^= | <<= | >>=
 
-condExpr -> logicExpr ? assignExpr : condExpr
+condExpr -> logicOrExpr ? assignExpr : condExpr
             | logicOrExpr
 logicOrExpr -> loginOrExpr || loginAndExpr
             | loginAndExpr
@@ -58,7 +60,8 @@ unaryExpr -> - factorExpr 取负数
             | factorExpr
 factorExpr -> factorExpr.ID
             | factorExpr[expr]
+            | callFuncExpr
             | ID
-            | NUM | STRING | CHAR 各种常量
-            | CALL_FUNC
+            | NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL 各种常量
             | (expr)
+callFuncExpr -> ID(param)

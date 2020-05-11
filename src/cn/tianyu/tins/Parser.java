@@ -165,15 +165,6 @@ public class Parser {
         return varDef;
     }
 
-    // TODO
-    private ExprNode expr() {
-        Token token = lexer.nextIgnoreLineBreak();
-        while (token.type != Token.Type.COMMA) {
-            token = lexer.nextIgnoreLineBreak();
-        }
-        return null;
-    }
-
     /**
      * 判断token type是否变量类型
      */
@@ -319,5 +310,34 @@ public class Parser {
             token = lexer.peekIgnoreLineBreak();
         }
         return switchStmt;
+    }
+
+
+    private ExprNode expr() {
+        ExprNode cond = condExpr();
+        Token label = lexer.peekIgnoreLineBreak();
+        if (label.type.ordinal() >= Token.Type.ASSIGN.ordinal()
+                && label.type.ordinal() <= Token.Type.RSH_ASSIGN.ordinal()) {
+            lexer.nextIgnoreLineBreak();
+            ExprNode assignExpr = expr();
+        }
+        return cond;
+    }
+
+    private ExprNode condExpr() {
+
+    }
+
+    private ExprNode factorExpr() {
+        // 读取的token列表，函数结束时要back回去
+        List<Token> tokens = new LinkedList<>();
+        Token token = lexer.nextIgnoreLineBreak();
+        if (token.type == Token.Type.NUMBER_VAL
+                || token.type == Token.Type.STRING_VAL
+                || token.type == Token.Type.DOUBLE_VAL
+                || token.type == Token.Type.FLOAT_VAL
+                || token.type == Token.Type.CHAR_VAL) {
+
+        }
     }
 }

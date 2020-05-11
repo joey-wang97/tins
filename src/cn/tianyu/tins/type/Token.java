@@ -12,6 +12,9 @@ public class Token {
         IDENTIFIER,
         NUMBER_VAL,
         STRING_VAL,
+        CHAR_VAL,
+        DOUBLE_VAL,
+        FLOAT_VAL,
         // 关键字
         INT,
         CHAR,
@@ -51,15 +54,16 @@ public class Token {
         AND,
         NOT,
         // 位运算
-        BOR,
-        BAND,
-        BXOR,
+        B_OR,
+        B_AND,
+        B_XOR,
         // 自增，自减，左移右移
         INC,
         DEC,
         LSH,
         RSH,
-        ASSIGN,
+        // 各种形式的赋值 = += -= *= /= %= &= |= ^= <<= >>=
+        ASSIGN, ADD_ASSIGN, SUB_ASSIGN, MUL_ASSIGN, DIV_ASSIGN, MOD_ASSIGN, B_AND_ASSIGN, B_OR_ASSIGN, B_XOR_ASSIGN, LSH_ASSIGN, RSH_ASSIGN,
         // 左右花括号, ，左右方括号，点，分号，逗号，单双引号
         L_CURLY_BRACKET,
         R_CURLY_BRACKET,
