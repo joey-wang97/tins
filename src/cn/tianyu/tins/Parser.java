@@ -1,8 +1,10 @@
 package cn.tianyu.tins;
 
 import cn.tianyu.tins.ast.*;
+import cn.tianyu.tins.ast.expr.*;
 import cn.tianyu.tins.ast.stmt.*;
 import cn.tianyu.tins.type.Token;
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -312,20 +314,155 @@ public class Parser {
         return switchStmt;
     }
 
-
+    //表达式，默认为赋值表达式
     private ExprNode expr() {
-        ExprNode cond = condExpr();
+        ExprNode left = condExpr();
         Token label = lexer.peekIgnoreLineBreak();
         if (label.type.ordinal() >= Token.Type.ASSIGN.ordinal()
                 && label.type.ordinal() <= Token.Type.RSH_ASSIGN.ordinal()) {
-            lexer.nextIgnoreLineBreak();
-            ExprNode assignExpr = expr();
+            Token.Type operator = lexer.nextIgnoreLineBreak().type;
+            ExprNode rightExpr = expr();
+            return new AssignExpr(left, operator, rightExpr);
         }
-        return cond;
+        return left;
     }
 
     private ExprNode condExpr() {
+        ExprNode left = logicOrExpr();
+        Token label = lexer.peekIgnoreLineBreak();
+        if (label.type == Token.Type.QUESTION_MARK) {
+            lexer.nextIgnoreLineBreak();
+            ExprNode trueExpr = expr();
+            lexer.matchIgnoreLineBreak(Token.Type.COLON);
+            return new CondExpr(left, trueExpr, condExpr());
+        }
+        return left;
+    }
 
+    // 这是正常写法
+    /*private ExprNode logicOrExpr() {
+        ExprNode left = logicAndExpr();
+        while (lexer.peekIgnoreLineBreak().type == Token.Type.OR) {
+            lexer.nextIgnoreLineBreak();
+            left = new LogicOrExpr(left, logicAndExpr());
+        }
+        return left;
+    }*/
+
+    //这是我的第一想法，用递归代替循环，应该没问题
+    private ExprNode logicOrExpr() {
+        ExprNode left = logicAndExpr();
+        if (lexer.peekIgnoreLineBreak().type == Token.Type.OR) {
+            lexer.nextIgnoreLineBreak();
+            return new LogicOrExpr(left, logicOrExpr());
+        }
+        return left;
+    }
+
+    private ExprNode logicAndExpr() {
+        ExprNode left = bitOrExpr();
+        while (lexer.peekIgnoreLineBreak().type == Token.Type.AND) {
+            lexer.nextIgnoreLineBreak();
+            left = new LogicAndExpr(left, bitOrExpr());
+        }
+        return left;
+    }
+
+    private ExprNode bitOrExpr() {
+        ExprNode left = bitXorExpr();
+        while (lexer.peekIgnoreLineBreak().type == Token.Type.B_OR) {
+            lexer.nextIgnoreLineBreak();
+            left = new BitOrExpr(left, bitXorExpr());
+        }
+        return left;
+    }
+
+    private ExprNode bitXorExpr() {
+        ExprNode left = bitAndExpr();
+        while (lexer.peekIgnoreLineBreak().type == Token.Type.B_XOR) {
+            lexer.nextIgnoreLineBreak();
+            left = new BitXorExpr(left, bitAndExpr());
+        }
+        return left;
+    }
+
+    private ExprNode bitAndExpr() {
+        ExprNode left = equalityExpr();
+        while (lexer.peekIgnoreLineBreak().type == Token.Type.B_AND) {
+            lexer.nextIgnoreLineBreak();
+            left = new BitAndExpr(left, equalityExpr());
+        }
+        return left;
+    }
+
+    private ExprNode equalityExpr() {
+        ExprNode left = relationExpr();
+        while (lexer.peekIgnoreLineBreak().type == Token.Type.EQ
+                || lexer.peekIgnoreLineBreak().type == Token.Type.NE) {
+            left = new EqualityExpr(left, lexer.nextIgnoreLineBreak().type, relationExpr());
+        }
+        return left;
+    }
+
+    private ExprNode relationExpr() {
+        ExprNode expr = shiftExpr();
+        while (lexer.peekIgnoreLineBreak().type.ordinal() >= Token.Type.GT.ordinal()
+                && lexer.peekIgnoreLineBreak().type.ordinal() <= Token.Type.LT.ordinal()) {
+            expr = new RelationExpr(expr, lexer.nextIgnoreLineBreak().type, shiftExpr());
+        }
+        return expr;
+    }
+
+    private ExprNode shiftExpr() {
+        ExprNode expr = addOrSubExpr();
+        while (lexer.peekIgnoreLineBreak().type == Token.Type.LSH
+                || lexer.peekIgnoreLineBreak().type == Token.Type.RSH) {
+            expr = new ShiftExpr(expr, lexer.nextIgnoreLineBreak().type, addOrSubExpr());
+        }
+        return expr;
+    }
+
+    private ExprNode addOrSubExpr() {
+        ExprNode expr = mulOrDivExpr();
+        while (lexer.peekIgnoreLineBreak().type == Token.Type.ADD
+                || lexer.peekIgnoreLineBreak().type == Token.Type.SUB) {
+            expr = new AddOrSubExpr(expr, lexer.nextIgnoreLineBreak().type, mulOrDivExpr());
+        }
+        return expr;
+    }
+
+    private ExprNode mulOrDivExpr() {
+        ExprNode left = suffixUnaryExpr();
+        while (lexer.peekIgnoreLineBreak().type == Token.Type.MUL
+                || lexer.peekIgnoreLineBreak().type == Token.Type.DIV) {
+            left = new MulOrDivExpr(left, lexer.nextIgnoreLineBreak().type, suffixUnaryExpr());
+        }
+        return left;
+    }
+
+    private ExprNode suffixUnaryExpr() {
+        ExprNode expr = prefixUnaryExpr();
+        if (lexer.peekIgnoreLineBreak().type == Token.Type.INC
+                || lexer.peekIgnoreLineBreak().type == Token.Type.DEC) {
+            return new SuffixUnaryExpr(expr, lexer.nextIgnoreLineBreak().type);
+        }
+        return expr;
+    }
+
+    private ExprNode prefixUnaryExpr() {
+        Token.Type labelType = lexer.peekIgnoreLineBreak().type;
+        // 取反，取非，都是可递归的
+        if (labelType == Token.Type.TILDE || labelType == Token.Type.NOT) {
+            return new PrefixUnaryExpr(lexer.nextIgnoreLineBreak().type, prefixUnaryExpr());
+        } else if (labelType == Token.Type.INC // 这些操作符不可递归
+                || labelType == Token.Type.DEC
+                || labelType == Token.Type.SUB) {
+            return new PrefixUnaryExpr(lexer.nextIgnoreLineBreak().type, factorExpr());
+            int i = 0;
+            (User)i;
+            (user);
+        }
+        return expr;
     }
 
     private ExprNode factorExpr() {

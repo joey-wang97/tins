@@ -76,8 +76,12 @@ public class Token {
         DOT,
         // 分号
         SEMICOLON,
+        // 波浪号
+        TILDE,
         // 冒号
         COLON,
+        // 问号
+        QUESTION_MARK,
         COMMA,
         // 单双引号
         SINGLE_QUOTATION,

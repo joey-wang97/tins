@@ -11,8 +11,8 @@ stmt -> ifStmt | whileStmt | forStmt | switchStmt | breakStmt | continueStmt | r
 
 # 表达式解析
 expr -> assignExpr
-# todo assignExpr -> factorExpr OP_ASSIGN assignExpr
 
+# todo assignExpr -> factorExpr OP_ASSIGN assignExpr
 assignExpr -> condExpr OP_ASSIGN assignExpr #偷个懒
             | condExpr
 
@@ -21,8 +21,8 @@ OP_ASSIGN -> = | += | -= | *= | /= | %= | &= | '|=' | ^= | <<= | >>=
 
 condExpr -> logicOrExpr ? assignExpr : condExpr
             | logicOrExpr
-logicOrExpr -> loginOrExpr || loginAndExpr
-            | loginAndExpr
+logicOrExpr -> logicOrExpr || logicAndExpr
+            | logicAndExpr
 logicAndExpr -> logicAndExpr && bitOrExpr
             | bitOrExpr
 bitOrExpr -> bitOrExpr | bitXorExpr
@@ -48,15 +48,15 @@ addOrSubExpr -> addOrSubExpr + mulOrDivExpr 字符串运算特殊处理
 mulOrDivExpr -> mulOrDivExpr * suffixUnaryExpr
             | mulOrDivExpr / suffixUnaryExpr
             | suffixUnaryExpr
-suffixUnaryExpr -> unaryExpr ++
-            | unaryExpr --
-            | unaryExpr
-unaryExpr -> - factorExpr 取负数
-            | ~ factorExpr 按位取反
+suffixUnaryExpr -> prefixUnaryExpr ++
+            | prefixUnaryExpr --
+            | prefixUnaryExpr
+prefixUnaryExpr -> - factorExpr 取负数
+            | ~ prefixUnaryExpr 按位取反
             | ++ factorExpr
             | -- factorExpr
-            | ! factorExpr
-            | (TYPE) unaryExpr 类型转换表达式，可递归
+            | ! prefixUnaryExpr
+            | (TYPE) prefixUnaryExpr 类型转换表达式，可递归
             | factorExpr
 factorExpr -> factorExpr.ID
             | factorExpr[expr]
