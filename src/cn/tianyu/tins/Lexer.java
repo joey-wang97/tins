@@ -245,10 +245,26 @@ public class Lexer {
             token.type = Token.Type.DOT;
         } else if (c == ':') {
             token.type = Token.Type.COLON;
-        } else if (c == '"') {
-            token.type = Token.Type.DOUBLE_QUOTATION;
+        } else if (c == '"') { //获取string字面量
+            StringBuilder buffer = new StringBuilder();
+            char v = charAt(position++);
+            // todo string长度判断
+            while (v != '"') {
+                buffer.append(v);
+                v = charAt(position++);
+                if (v == 0) {
+                    error("illegal string without end!");
+                }
+            }
+            token.type = Token.Type.STRING_VAL;
+            token.value = buffer.toString();
         } else if (c == '\'') {
-            token.type = Token.Type.SINGLE_QUOTATION;
+            // todo need legal judge?
+            char v = charAt(position++);
+            token.type = Token.Type.CHAR_VAL;
+            if (charAt(position++) != '\'') {
+                error("illegal character1");
+            }
         } else if (c == '\n') {
             token.type = Token.Type.LINE_BREAK;
             // 遇到换行符时，oldPosition还停留在换行符，计算col时，会将换行符也算上，所以此处往后移动一个字符
