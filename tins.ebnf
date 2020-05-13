@@ -1,10 +1,10 @@
 program = importStmt | varDefStmt | funcDef
 
 (* import语句不可换行 *)
-importStmt = IMPORT ID.ID.ID
+importStmt = IMPORT ID '.' ID '.' ID
 
 varDef = TYPE ID
-       | TYPE[] ID '=' expr
+       | TYPE '[' ']' ID '=' expr
 
 structDef = STRUCT ID '{' varDef, funcDef '}'
 
@@ -44,7 +44,7 @@ OP_ASSIGN = '='
           | '<<='
           | '>>='
 
-condExpr = logicOrExpr ? assignExpr : condExpr
+condExpr = logicOrExpr '?' assignExpr ':' condExpr
          | logicOrExpr
 
 logicOrExpr = logicOrExpr '||' logicAndExpr
@@ -102,6 +102,6 @@ factorExpr = factorExpr '.' ID
            | callFuncExpr
            | ID
            | NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL
-           | (expr)
+           | '(' expr ')'
 
 callFuncExpr = ID '(' param ')'
