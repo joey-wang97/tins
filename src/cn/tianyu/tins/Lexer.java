@@ -11,19 +11,95 @@ import java.util.List;
 public class Lexer {
 
     String src;
-    int position = 0;
-    int line = 1, col = 0;
     /**
-     * 只存放非换行符
+     * 源文件中读取的位置
      */
-    List<Token> list = new LinkedList<>();
+    int srcPosition = 0;
+    int line = 1, col = 0;
+
+    List<Token> readTokens = new LinkedList<>();
+    /**
+     * 下一个要获取的token位置
+     */
+    int tokenPosition = 0;
 
     public Lexer(String fileName) {
         readFile(fileName);
+        // 直接一次性读取出来所有token
+        Token token;
+        while ((token = readNextTokenFromSrc()).type != Token.Type.END) {
+            readTokens.add(token);
+        }
     }
 
     /**
-     * 直接读取文件内容到src
+     * 使词法分析器重新从第一个token开始next
+     */
+    public void moveToHead() {
+        tokenPosition = 0;
+    }
+
+
+    /**
+     * 忽略换行符，取一个token
+     */
+    public Token peekIgnoreLineBreak() {
+        while (readTokens.get(tokenPosition).type == Token.Type.LINE_BREAK) {
+            tokenPosition++;
+        }
+        return readTokens.get(tokenPosition);
+    }
+
+    /**
+     * 向前看n个非换行符token
+     */
+    public Token lookAheadIgnoreLineBreak(int n) {
+        int p = tokenPosition;
+        for (int i = 0; i < n;) {
+            while (readTokens.get(p).type == Token.Type.LINE_BREAK)
+                p++;
+            i++;
+        }
+        return readTokens.get(p);
+    }
+
+    public Token match(Token.Type type) {
+        Token token = readTokens.get(tokenPosition++);
+        if (token.type != type) {
+            unexpectedToken(token.type, type);
+        }
+        return token;
+    }
+
+    public Token matchIgnoreLineBreak(Token.Type type) {
+        Token token;
+        while ((token = readTokens.get(tokenPosition)).type == Token.Type.LINE_BREAK) {
+            tokenPosition++;
+        }
+        if (token.type != type) {
+            unexpectedToken(token.type, type);
+        }
+        return token;
+    }
+
+    /**
+     * 返回不包括换行符的token
+     * 遇到换行符则继续
+     */
+    public Token nextIgnoreLineBreak() {
+        Token token = readTokens.get(tokenPosition);
+        while (token.type == Token.Type.LINE_BREAK) {
+            token = readTokens.get(++tokenPosition);
+        }
+        return token;
+    }
+
+    public Token next() {
+        return readTokens.get(tokenPosition++);
+    }
+
+    /**
+     * 直接读取整个文件内容到src
      */
     private void readFile(String fileName) {
         try {
@@ -54,173 +130,126 @@ public class Lexer {
             return 0;
     }
 
-    public void unexpectedToken(Token.Type unexpectedType) {
-        error("unexpected token type: " + unexpectedType.name());
-    }
-
-    public void unexpectedToken(Token.Type unexpectedType, Token.Type expectedType) {
-        error("unexpected token type: " + unexpectedType.name() + ", expected is: " + expectedType.name());
-    }
-
-    public void error(String str) {
-        throw new RuntimeException(String.format("at line %d:%d, %s", line, col, str));
-    }
-
-    public Token peek() {
-        if (list.isEmpty()) {
-            list.add(next());
-        }
-        return list.get(0);
-    }
-
-    /**
-     * 忽略换行符，取一个token
-     */
-    public Token peekIgnoreLineBreak() {
-        if (list.isEmpty()) {
-            list.add(nextIgnoreLineBreak());
-        }
-        return list.get(0);
-    }
-
-    public void back(Token token) {
-        if (token.type == Token.Type.LINE_BREAK) {
-            error("can't back token of line break");
-        }
-        list.add(0, token);
-    }
-
-    public Token match(Token.Type type) {
-        Token token = next();
-        if (token.type != type) {
-            unexpectedToken(token.type, type);
-        }
-        return token;
-    }
-
-    public Token matchIgnoreLineBreak(Token.Type type) {
-        Token token = nextIgnoreLineBreak();
-        if (token.type != type) {
-            unexpectedToken(token.type, type);
-        }
-        return token;
-    }
-
-    /**
-     * 返回不包括换行符的token
-     * 遇到换行符则继续
-     */
-    public Token nextIgnoreLineBreak() {
-        Token token = next();
-        while (token.type == Token.Type.LINE_BREAK) {
-            token = next();
-        }
-        return token;
-    }
-
     /**
      * 返回所有类型的token，包括换行符
      */
-    public Token next() {
-        if (!list.isEmpty()) {
-            return list.remove(0);
-        }
+    public Token readNextTokenFromSrc() {
 
         Token token = new Token();
-        if (position >= src.length()) {
+        if (srcPosition >= src.length()) {
             token.type = Token.Type.END;
             return token;
         }
 
         char c;
-        while (((c = charAt(position++)) == ' ' || c == '\t')) {
+        while (((c = charAt(srcPosition++)) == ' ' || c == '\t')) {
             col++;
             if (c == '\t')
                 col += 3;
         }
 
         // 当前正在读的位置
-        int oldPosition = position - 1;
+        int oldPosition = srcPosition - 1;
 
         // identifier
         if (Character.isLetter(c) || c == '_') {
-            c = charAt(position);
+            c = charAt(srcPosition);
             while (Character.isLetter(c) || Character.isDigit(c)) {
-                c = charAt(++position);
+                c = charAt(++srcPosition);
             }
-            String name = src.substring(oldPosition, position);
+            String name = src.substring(oldPosition, srcPosition);
             token.type = checkTokenType(name);
             if (token.type == Token.Type.IDENTIFIER)
                 token.name = name;
         } else if (Character.isDigit(c)) {
             // digit
-            token.type = Token.Type.NUMBER_VAL;
             if (c != '0') {
-                token.value = parseDecimal();
-            } else if (src.charAt(position) == 'X' || src.charAt(position) == 'x') {
+                // 可能为整数或小数
+                token = parseDecimal();
+            } else if (src.charAt(srcPosition) == 'X' || src.charAt(srcPosition) == 'x') {
+                token.type = Token.Type.NUMBER_VAL;
                 token.value = parseHex();
             } else {
+                token.type = Token.Type.NUMBER_VAL;
                 token.value = parseOct();
             }
         } else if (c == '#') {
             skipComment();
-            return next();
+            return readNextTokenFromSrc();
         } else if (c == '+') {
             token.type = Token.Type.ADD;
-            if (charAt(position) == '+') {
-                position++;
+            if (charAt(srcPosition) == '+') {
+                srcPosition++;
                 token.type = Token.Type.INC;
+            } else if (charAt(srcPosition) =='=') {
+                srcPosition++;
+                token.type = Token.Type.ADD_ASSIGN;
             }
         } else if (c == '-') {
             token.type = Token.Type.SUB;
-            if (charAt(position) == '-') {
-                position++;
+            if (charAt(srcPosition) == '-') {
+                srcPosition++;
                 token.type = Token.Type.DEC;
+            } else if (charAt(srcPosition) =='=') {
+                srcPosition++;
+                token.type = Token.Type.SUB_ASSIGN;
             }
         } else if (c == '*') {
             token.type = Token.Type.MUL;
+            if (charAt(srcPosition) == '=') {
+                srcPosition++;
+                token.type = Token.Type.MUL_ASSIGN;
+            }
         } else if (c == '/') {
             token.type = Token.Type.DIV;
+            if (charAt(srcPosition) == '=') {
+                srcPosition++;
+                token.type = Token.Type.DIV_ASSIGN;
+            }
         } else if (c == '%') {
             token.type = Token.Type.MOD;
+            if (charAt(srcPosition) == '=') {
+                srcPosition++;
+                token.type = Token.Type.MOD_ASSIGN;
+            }
         } else if (c == '>') {
             token.type = Token.Type.GT;
-            if (charAt(position) == '=') {
-                position++;
+            if (charAt(srcPosition) == '=') {
+                srcPosition++;
                 token.type = Token.Type.GE;
-            } else if (charAt(position) == '>') {
+            } else if (charAt(srcPosition) == '>') {
                 token.type = Token.Type.RSH;
             }
         } else if (c == '<') {
             token.type = Token.Type.LT;
-            if (charAt(position) == '=') {
-                position++;
+            if (charAt(srcPosition) == '=') {
+                srcPosition++;
                 token.type = Token.Type.LE;
-            } else if (charAt(position) == '<') {
+            } else if (charAt(srcPosition) == '<') {
                 token.type = Token.Type.LSH;
             }
         } else if (c == '=') {
             token.type = Token.Type.ASSIGN;
-            if (charAt(position) == '=') {
-                position++;
+            if (charAt(srcPosition) == '=') {
+                srcPosition++;
                 token.type = Token.Type.EQ;
             }
         } else if (c == '!') {
             token.type = Token.Type.NOT;
-            if (charAt(position) == '=') {
-                position++;
+            if (charAt(srcPosition) == '=') {
+                srcPosition++;
                 token.type = Token.Type.NE;
             }
         } else if (c == '|') {
             token.type = Token.Type.B_OR;
-            if (charAt(position) == '|') {
-                position++;
+            if (charAt(srcPosition) == '|') {
+                srcPosition++;
                 token.type = Token.Type.OR;
             }
         } else if (c == '&') {
             token.type = Token.Type.B_AND;
-            if (charAt(position) == '&') {
-                position++;
+            if (charAt(srcPosition) == '&') {
+                srcPosition++;
                 token.type = Token.Type.AND;
             }
         } else if (c == '^') {
@@ -241,17 +270,21 @@ public class Lexer {
             token.type = Token.Type.SEMICOLON;
         } else if (c == ',') {
             token.type = Token.Type.COMMA;
-        } else if (c == '.') {
+        } else if (c == '?') {
+            token.type = Token.Type.QUESTION_MARK;
+        }  else if (c == '~') {
+            token.type = Token.Type.BIT_REVERSE;
+        }  else if (c == '.') {
             token.type = Token.Type.DOT;
         } else if (c == ':') {
             token.type = Token.Type.COLON;
         } else if (c == '"') { //获取string字面量
             StringBuilder buffer = new StringBuilder();
-            char v = charAt(position++);
+            char v = charAt(srcPosition++);
             // todo string长度判断
             while (v != '"') {
                 buffer.append(v);
-                v = charAt(position++);
+                v = charAt(srcPosition++);
                 if (v == 0) {
                     error("illegal string without end!");
                 }
@@ -259,10 +292,10 @@ public class Lexer {
             token.type = Token.Type.STRING_VAL;
             token.value = buffer.toString();
         } else if (c == '\'') {
-            // todo need legal judge?
-            char v = charAt(position++);
+            // todo 合法字符判断
+            token.value = charAt(srcPosition++);
             token.type = Token.Type.CHAR_VAL;
-            if (charAt(position++) != '\'') {
+            if (charAt(srcPosition++) != '\'') {
                 error("illegal character1");
             }
         } else if (c == '\n') {
@@ -275,25 +308,46 @@ public class Lexer {
             System.err.println(String.format("lex error at line %d:%d, unexpected char: %c(%d)", line, col, charAt(oldPosition), (int) charAt(oldPosition)));
             System.exit(-1);
         }
-        col += position - oldPosition + 1;
+        col += srcPosition - oldPosition + 1;
+        readTokens.add(token);
         return token;
     }
 
     /**
-     * 转化十进制
+     * 转化十进制，包括小数
      */
-    private int parseDecimal() {
-        int sum = charAt(position - 1) - '0';
-        char c = charAt(position);
+    private Token parseDecimal() {
+        Token token = new Token();
+        token.type = Token.Type.NUMBER_VAL;
+        int sum = charAt(srcPosition - 1) - '0';
+        char c = charAt(srcPosition);
         while (c >= '0' && c <= '9') {
             sum = sum * 10 + c - '0';
-            c = charAt(++position);
+            c = charAt(++srcPosition);
         }
-        return sum;
+        token.value = sum;
+        // 遇到小数点，解析小数
+        if (charAt(srcPosition) == '.') {
+            double sum1 = 0;
+            int radix = 10;
+            token.type = Token.Type.FLOAT_VAL;
+            c = charAt(++srcPosition);
+            // 检查小数点后是不是数字
+            if (!Character.isDigit(c)) {
+                error("decimal value must be followed by number!");
+            }
+            while (Character.isDigit(c)) {
+                sum1 += (c - '0') / 1.0 / radix;
+                radix *= 10;
+                c = charAt(++srcPosition);
+            }
+            token.value = sum / 1.0 + sum1;
+        }
+        return token;
     }
 
     private int parseHex() {
-        char c = charAt(++position);
+        char c = charAt(++srcPosition);
         int sum = 0;
         while (c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f') {
             int r = c - '0';
@@ -302,31 +356,28 @@ public class Lexer {
             if (c >= 'a')
                 r = c - 'a';
             sum = sum * 16 + r;
-            c = charAt(++position);
+            c = charAt(++srcPosition);
         }
         return sum;
     }
 
     private int parseOct() {
-        char c = charAt(position);
+        char c = charAt(srcPosition);
         int sum = c - '0';
         while (c >= '0' && c <= '7') {
             sum = sum * 8 + c - '0';
-            c = charAt(++position);
+            c = charAt(++srcPosition);
         }
         return sum;
     }
 
-    /**
-     * skip comment
-     */
     private void skipComment() {
-        while (position < src.length() && charAt(position) != '\n')
-            position++;
+        while (srcPosition < src.length() && charAt(srcPosition) != '\n')
+            srcPosition++;
     }
 
     /**
-     * 得到一个标识符的类型，是标识符还是关键字
+     * 判断一个标识符，是标识符还是关键字
      */
     private Token.Type checkTokenType(String identifier) {
         int start = Token.Type.INT.ordinal();
@@ -337,6 +388,18 @@ public class Lexer {
                 return Token.Type.values()[i];
         }
         return Token.Type.IDENTIFIER;
+    }
+
+    public void unexpectedToken(Token.Type unexpectedType) {
+        error("unexpected token type: " + unexpectedType.name());
+    }
+
+    public void unexpectedToken(Token.Type unexpectedType, Token.Type expectedType) {
+        error("unexpected token type: " + unexpectedType.name() + ", expected is: " + expectedType.name());
+    }
+
+    public void error(String str) {
+        throw new RuntimeException(String.format("at line %d:%d, %s", line, col, str));
     }
 
 }

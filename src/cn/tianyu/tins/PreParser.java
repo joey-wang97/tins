@@ -3,28 +3,26 @@ package cn.tianyu.tins;
 import cn.tianyu.tins.ast.*;
 import cn.tianyu.tins.ast.expr.*;
 import cn.tianyu.tins.ast.stmt.*;
-import cn.tianyu.tins.type.Symbol;
 import cn.tianyu.tins.type.Token;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Parser {
+public class PreParser {
 
     Lexer lexer;
 
-    public Parser(String fileName) {
+    public PreParser(String fileName) {
         lexer = new Lexer(fileName);
     }
 
     public TopDefNode parser() {
 
-        preParser();
-
         TopDefNode top = new TopDefNode();
 
-        // 先加载所有import语句
+        // 先加载所有import语句，
+        // todo 放到符号表
         if (lexer.peekIgnoreLineBreak().type == Token.Type.IMPORT) {
             top.importNodes.addAll(importStmts());
         }
@@ -39,14 +37,6 @@ public class Parser {
             }
         }
         return top;
-    }
-
-    /**
-     * 第一趟分析，分析其中所有的定义.
-     * 包括结构体定义和函数定义
-     */
-    public void preParser() {
-
     }
 
     /**

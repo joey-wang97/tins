@@ -82,6 +82,8 @@ public class Token {
         COLON,
         // 问号
         QUESTION_MARK,
+        // 按位取反
+        BIT_REVERSE,
         COMMA,
         // 单双引号
         SINGLE_QUOTATION,

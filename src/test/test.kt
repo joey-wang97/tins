@@ -6,5 +6,9 @@ fun main() {
     var b : Int = 2
     b    =
     3
-    println(b)
+    print(test())
+}
+
+fun test(): Int {
+    return 0;
 }
