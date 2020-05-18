@@ -6,7 +6,8 @@ import cn.tianyu.tins.type.Token;
 public class Main {
 
     public static void main(String[] args) {
-        testParser("test1.tins");
+        // testParser("sample/test1.tins");
+        testLexer("sample/test1.tins");
     }
 
     public static void testLexer(String fileName) {
@@ -21,7 +22,7 @@ public class Main {
     public static void testParser(String fileName) {
         Parser parser = new Parser(fileName);
         TopDefNode ast = parser.parser();
-        ast.dump();
+        // ast.dump();
     }
 
 }

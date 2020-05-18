@@ -20,6 +20,6 @@ public class FuncDefNode extends Node {
         dump(indent, "func params:");
         paramNode.forEach(i -> i.dump(indent + Node.INDENT));
         dump(indent, "func stmts:");
-        stmts.forEach(i -> i.dump(indent + Node.INDENT));
+        // stmts.forEach(i -> i.dump(indent + Node.INDENT));
     }
 }

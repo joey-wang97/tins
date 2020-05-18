@@ -30,25 +30,13 @@ public class PreParser {
         while (lexer.peekIgnoreLineBreak().type != Token.Type.END) {
             if (lexer.peekIgnoreLineBreak().type == Token.Type.STRUCT) {
                 top.structDefNodes.add(structDef());
-            } else if (isFunc()) {
+            } else if (lexer.lookAheadIgnoreLineBreak(3).type == Token.Type.OPEN_PARENTHESIS) {
                 top.funcDefNodes.add(funcDef());
             } else {
                 top.varDefNodes.addAll(varDefs());
             }
         }
         return top;
-    }
-
-    /**
-     * 判断是否是函数
-     */
-    private boolean isFunc() {
-        Token type = lexer.nextIgnoreLineBreak();
-        Token name = lexer.nextIgnoreLineBreak();
-        Token label = lexer.peekIgnoreLineBreak();
-        lexer.back(name);
-        lexer.back(type);
-        return label.type == Token.Type.OPEN_PARENTHESIS;
     }
 
     private boolean isLineEnd(Token.Type type) {
@@ -117,7 +105,7 @@ public class PreParser {
         List<VarDefNode> list = new ArrayList<>();
 
         // 数组定义
-        if (isArr()) {
+        if (lexer.lookAheadIgnoreLineBreak(3).type == Token.Type.L_SQUARE_BRACKET) {
             // 一行只能定义一个数组
             list.add(arrDef());
             return list;
@@ -147,16 +135,6 @@ public class PreParser {
             }
         }
         return list;
-    }
-
-    // 判断是否数组定义
-    private boolean isArr() {
-        Token type = lexer.nextIgnoreLineBreak();
-        Token name = lexer.nextIgnoreLineBreak();
-        Token label = lexer.peekIgnoreLineBreak();
-        lexer.back(name);
-        lexer.back(type);
-        return label.type == Token.Type.L_SQUARE_BRACKET;
     }
 
     private VarDefNode arrDef() {
@@ -459,11 +437,8 @@ public class PreParser {
                 || labelType == Token.Type.DEC
                 || labelType == Token.Type.SUB) {
             return new PrefixUnaryExpr(lexer.nextIgnoreLineBreak().type, factorExpr());
-            int i = 0;
-            (User) i;
-            (user);
         }
-        return expr;
+        return factorExpr();
     }
 
     private ExprNode factorExpr() {
@@ -477,5 +452,6 @@ public class PreParser {
                 || token.type == Token.Type.CHAR_VAL) {
 
         }
+        return null;
     }
 }

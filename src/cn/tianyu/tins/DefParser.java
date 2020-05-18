@@ -9,19 +9,18 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Parser {
+/**
+ * 只读取定义和符号，不解析语句
+ */
+public class DefParser {
 
     Lexer lexer;
 
-    public Parser(String fileName) {
-        lexer = new Lexer(fileName);
+    public DefParser(Lexer lexer) {
+        this.lexer = lexer;
     }
 
-    public TopDefNode parser() {
-
-        DefParser defParser = new DefParser(lexer);
-        defParser.preParser();
-
+    public void preParser() {
         TopDefNode top = new TopDefNode();
 
         // 先加载所有import语句
@@ -38,7 +37,7 @@ public class Parser {
                 top.varDefNodes.addAll(varDefs());
             }
         }
-        return top;
+        top.dump();
     }
 
     private boolean isLineEnd(Token.Type type) {
@@ -96,7 +95,7 @@ public class Parser {
         funcDefNode.funcType = funcType;
         funcDefNode.funcName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
         funcDefNode.paramNode = funParam();
-        funcDefNode.stmts = funcBody();
+        skipFuncBody();
         return funcDefNode;
     }
 
@@ -108,7 +107,7 @@ public class Parser {
 
         // 数组定义
         if (lexer.lookAheadIgnoreLineBreak(3).type == Token.Type.L_SQUARE_BRACKET) {
-            // 一行只能定义一个数组
+            // 一次只能定义一个数组
             list.add(arrDef());
             return list;
         }
@@ -139,6 +138,10 @@ public class Parser {
         return list;
     }
 
+    /**
+     * 一次只能定义一个数组
+     * @return
+     */
     private VarDefNode arrDef() {
         VarDefNode varDef = new VarDefNode();
         varDef.isArr = true;
@@ -195,14 +198,10 @@ public class Parser {
         return nodes;
     }
 
-    private List<StmtNode> funcBody() {
+    private void skipFuncBody() {
         lexer.matchIgnoreLineBreak(Token.Type.L_CURLY_BRACKET);
-        List<StmtNode> stmtNodes = new LinkedList<>();
-        while (lexer.peekIgnoreLineBreak().type != Token.Type.R_CURLY_BRACKET) {
-            stmtNodes.add(stmt());
-        }
-        lexer.matchIgnoreLineBreak(Token.Type.R_CURLY_BRACKET);
-        return stmtNodes;
+        while (lexer.next().type != Token.Type.R_CURLY_BRACKET)
+            ;
     }
 
     private StmtNode stmt() {

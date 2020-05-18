@@ -1,4 +1,5 @@
 import b
+import a.c
 struct
 a
 {
@@ -22,4 +23,17 @@ a
     {
 
     }
+}
+int 刘运星=1
+
+func 汪继友
+(
+double
+魏浩浩
+,
+float
+罗云冲
+)
+{
+var test= =1;
 }

@@ -1,4 +1,4 @@
-program = importStmt | varDefStmt | funcDef
+program = program (importStmt | varDef | structDef | funcDef)
 
 (* import语句不可换行 *)
 importStmt = IMPORT ID '.' ID '.' ID
