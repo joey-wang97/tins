@@ -3,6 +3,9 @@ package cn.tianyu.tins;
 import cn.tianyu.tins.ast.*;
 import cn.tianyu.tins.ast.expr.*;
 import cn.tianyu.tins.ast.stmt.*;
+import cn.tianyu.tins.symbol.StructSymbol;
+import cn.tianyu.tins.symbol.SymbolTable;
+import cn.tianyu.tins.symbol.VarSymbol;
 import cn.tianyu.tins.type.Token;
 
 import java.util.ArrayList;
@@ -21,16 +24,16 @@ public class DefParser {
     }
 
     public void preParser() {
-        TopDefNode top = new TopDefNode();
 
-        // 先加载所有import语句
+        // 先一次性加载所有import语句
+        // todo 解析import中的符号
         if (lexer.peekIgnoreLineBreak().type == Token.Type.IMPORT) {
-            top.importNodes.addAll(importStmts());
+            importStmts();
         }
 
         while (lexer.peekIgnoreLineBreak().type != Token.Type.END) {
             if (lexer.peekIgnoreLineBreak().type == Token.Type.STRUCT) {
-                top.structDefNodes.add(structDef());
+                SymbolTable.structSymbols.add(structDef());
             } else if (lexer.lookAheadIgnoreLineBreak(3).type == Token.Type.OPEN_PARENTHESIS) {
                 top.funcDefNodes.add(funcDef());
             } else {
@@ -68,17 +71,18 @@ public class DefParser {
         return list;
     }
 
-    private StructDefNode structDef() {
-        StructDefNode structDefNode = new StructDefNode();
+    private StructSymbol structDef() {
+        StructSymbol structSymbol = new StructSymbol();
         lexer.matchIgnoreLineBreak(Token.Type.STRUCT);
-        structDefNode.name = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
+        structSymbol.name = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
         lexer.matchIgnoreLineBreak(Token.Type.L_CURLY_BRACKET);
 
         while (lexer.peekIgnoreLineBreak().type != Token.Type.R_CURLY_BRACKET) {
             if (lexer.peekIgnoreLineBreak().type == Token.Type.FUNC) {
-                structDefNode.funcDefNodes.add(funcDef());
+                // todo struct中是否需要添加函数
+                funcDef();
             } else {
-                structDefNode.varDefNodes.addAll(varDefs());
+                structSymbol.fieldSymbols.addAll(varDefs());
             }
         }
         lexer.matchIgnoreLineBreak(Token.Type.R_CURLY_BRACKET);
@@ -102,8 +106,8 @@ public class DefParser {
     /**
      * 一行代码可能定义多个变量
      */
-    private List<VarDefNode> varDefs() {
-        List<VarDefNode> list = new ArrayList<>();
+    private List<VarSymbol> varDefs() {
+        List<VarSymbol> list = new ArrayList<>();
 
         // 数组定义
         if (lexer.lookAheadIgnoreLineBreak(3).type == Token.Type.L_SQUARE_BRACKET) {
@@ -114,25 +118,22 @@ public class DefParser {
 
         Token varType = lexer.nextIgnoreLineBreak();
         while (true) {
-            VarDefNode varDefNode = new VarDefNode();
-            varDefNode.varType = varType;
-            varDefNode.isArr = false;
-            varDefNode.varName = lexer.match(Token.Type.IDENTIFIER).name;
-            Token label = lexer.peekIgnoreLineBreak();
+            VarSymbol varSymbol = new VarSymbol();
+            varSymbol.varType = varType;
+            varSymbol.isArr = false;
+            varSymbol.varName = lexer.match(Token.Type.IDENTIFIER).name;
+            // 检查后面的符号，不可换行
+            Token label = lexer.peek();
 
             if (isLineEnd(label.type)) {
-                lexer.nextIgnoreLineBreak();
-                list.add(varDefNode);
+                list.add(varSymbol);
                 break;
             } else if (label.type == Token.Type.ASSIGN) {
-                //TODO 解析赋值表达式
-                varDefNode.value = expr();
+                skipExpr();
             } else if (label.type == Token.Type.COMMA) {
-                lexer.nextIgnoreLineBreak();
+                lexer.next();
             } else {
-                //遇到其他字符, 退出
-                list.add(varDefNode);
-                break;
+                lexer.unexpectedToken(label.type);
             }
         }
         return list;
@@ -140,10 +141,9 @@ public class DefParser {
 
     /**
      * 一次只能定义一个数组
-     * @return
      */
-    private VarDefNode arrDef() {
-        VarDefNode varDef = new VarDefNode();
+    private VarSymbol arrDef() {
+        VarSymbol varDef = new VarSymbol();
         varDef.isArr = true;
         varDef.varType = lexer.nextIgnoreLineBreak();
         varDef.varName = lexer.match(Token.Type.IDENTIFIER).name;
@@ -223,7 +223,7 @@ public class DefParser {
         IfStmtNode ifStmtNode = new IfStmtNode();
         lexer.matchIgnoreLineBreak(Token.Type.IF);
         lexer.matchIgnoreLineBreak(Token.Type.OPEN_PARENTHESIS);
-        ifStmtNode.condition = expr();
+        ifStmtNode.condition = skipExpr();
         lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
         ifStmtNode.ifStmt = stmt();
 
@@ -238,7 +238,7 @@ public class DefParser {
         WhileStmtNode whileStmtNode = new WhileStmtNode();
         lexer.matchIgnoreLineBreak(Token.Type.WHILE);
         lexer.matchIgnoreLineBreak(Token.Type.OPEN_PARENTHESIS);
-        whileStmtNode.condition = expr();
+        whileStmtNode.condition = skipExpr();
         lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
         whileStmtNode.stmt = stmt();
         return whileStmtNode;
@@ -248,11 +248,11 @@ public class DefParser {
         ForStmtNode forStmt = new ForStmtNode();
         lexer.matchIgnoreLineBreak(Token.Type.FOR);
         lexer.matchIgnoreLineBreak(Token.Type.OPEN_PARENTHESIS);
-        forStmt.init = expr();
+        forStmt.init = skipExpr();
         lexer.matchIgnoreLineBreak(Token.Type.SEMICOLON);
-        forStmt.condition = expr();
+        forStmt.condition = skipExpr();
         lexer.matchIgnoreLineBreak(Token.Type.SEMICOLON);
-        forStmt.operation = expr();
+        forStmt.operation = skipExpr();
         lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
         forStmt.stmt = stmt();
         return forStmt;
@@ -262,7 +262,7 @@ public class DefParser {
         SwitchStmtNode switchStmt = new SwitchStmtNode();
         lexer.matchIgnoreLineBreak(Token.Type.SWITCH);
         lexer.matchIgnoreLineBreak(Token.Type.OPEN_PARENTHESIS);
-        switchStmt.condition = expr();
+        switchStmt.condition = skipExpr();
         lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
 
         lexer.matchIgnoreLineBreak(Token.Type.L_CURLY_BRACKET);
@@ -273,7 +273,7 @@ public class DefParser {
                 CaseStmtNode caseStmt = new CaseStmtNode();
                 lexer.matchIgnoreLineBreak(Token.Type.CASE);
                 // todo case应该取term而不是expr
-                caseStmt.condition = expr();
+                caseStmt.condition = skipExpr();
                 lexer.matchIgnoreLineBreak(Token.Type.COLON);
                 // todo case可以处理多条语句
                 caseStmt.stmt = stmt();
@@ -295,13 +295,13 @@ public class DefParser {
     }
 
     //表达式，默认为赋值表达式
-    private ExprNode expr() {
+    private void skipExpr() {
         ExprNode left = condExpr();
         Token label = lexer.peekIgnoreLineBreak();
         if (label.type.ordinal() >= Token.Type.ASSIGN.ordinal()
                 && label.type.ordinal() <= Token.Type.RSH_ASSIGN.ordinal()) {
             Token.Type operator = lexer.nextIgnoreLineBreak().type;
-            ExprNode rightExpr = expr();
+            ExprNode rightExpr = skipExpr();
             return new AssignExpr(left, operator, rightExpr);
         }
         return left;
@@ -312,7 +312,7 @@ public class DefParser {
         Token label = lexer.peekIgnoreLineBreak();
         if (label.type == Token.Type.QUESTION_MARK) {
             lexer.nextIgnoreLineBreak();
-            ExprNode trueExpr = expr();
+            ExprNode trueExpr = skipExpr();
             lexer.matchIgnoreLineBreak(Token.Type.COLON);
             return new CondExpr(left, trueExpr, condExpr());
         }

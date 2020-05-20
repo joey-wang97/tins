@@ -37,3 +37,9 @@ float
 {
 var test= =1;
 }
+
+int a = 1, b = fun1(), c = a == func() ?
+c[i+9] * (int)(10.0)
+:
+b().c.d + a
+-b, d

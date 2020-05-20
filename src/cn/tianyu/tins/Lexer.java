@@ -39,6 +39,9 @@ public class Lexer {
         tokenPosition = 0;
     }
 
+    public Token peek() {
+        return readTokens.get(tokenPosition);
+    }
 
     /**
      * 忽略换行符，取一个token
