@@ -1,8 +1,8 @@
 package cn.tianyu.tins;
 
 import cn.tianyu.tins.ast.*;
-import cn.tianyu.tins.ast.expr.*;
 import cn.tianyu.tins.ast.stmt.*;
+import cn.tianyu.tins.symbol.FuncSymbol;
 import cn.tianyu.tins.symbol.StructSymbol;
 import cn.tianyu.tins.symbol.SymbolTable;
 import cn.tianyu.tins.symbol.VarSymbol;
@@ -35,12 +35,12 @@ public class DefParser {
             if (lexer.peekIgnoreLineBreak().type == Token.Type.STRUCT) {
                 SymbolTable.structSymbols.add(structDef());
             } else if (lexer.lookAheadIgnoreLineBreak(3).type == Token.Type.OPEN_PARENTHESIS) {
-                top.funcDefNodes.add(funcDef());
+                SymbolTable.funcSymbols.add(funcDef());
             } else {
-                top.varDefNodes.addAll(varDefs());
+                SymbolTable.varSymbols.addAll(varDefs());
             }
         }
-        top.dump();
+        SymbolTable.print();
     }
 
     private boolean isLineEnd(Token.Type type) {
@@ -79,18 +79,17 @@ public class DefParser {
 
         while (lexer.peekIgnoreLineBreak().type != Token.Type.R_CURLY_BRACKET) {
             if (lexer.peekIgnoreLineBreak().type == Token.Type.FUNC) {
-                // todo struct中是否需要添加函数
                 funcDef();
             } else {
                 structSymbol.fieldSymbols.addAll(varDefs());
             }
         }
         lexer.matchIgnoreLineBreak(Token.Type.R_CURLY_BRACKET);
-        return structDefNode;
+        return structSymbol;
     }
 
-    private FuncDefNode funcDef() {
-        FuncDefNode funcDefNode = new FuncDefNode();
+    private FuncSymbol funcDef() {
+        FuncSymbol funcDefNode = new FuncSymbol();
         lexer.matchIgnoreLineBreak(Token.Type.FUNC);
         Token funcType = lexer.nextIgnoreLineBreak();
         // 检查函数类型是否合法
@@ -98,7 +97,7 @@ public class DefParser {
             lexer.error("func type can't be " + funcType.name);
         funcDefNode.funcType = funcType;
         funcDefNode.funcName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
-        funcDefNode.paramNode = funParam();
+        funcDefNode.params = funParam();
         skipFuncBody();
         return funcDefNode;
     }
@@ -129,6 +128,7 @@ public class DefParser {
                 list.add(varSymbol);
                 break;
             } else if (label.type == Token.Type.ASSIGN) {
+                lexer.next();
                 skipExpr();
             } else if (label.type == Token.Type.COMMA) {
                 lexer.next();
@@ -162,8 +162,8 @@ public class DefParser {
     /**
      * 函数参数解析
      */
-    private List<FuncParamNode> funParam() {
-        List<FuncParamNode> nodes = new LinkedList<>();
+    private List<VarSymbol> funParam() {
+        List<VarSymbol> nodes = new LinkedList<>();
         lexer.matchIgnoreLineBreak(Token.Type.OPEN_PARENTHESIS);
         // 空函数参数
         if (lexer.peekIgnoreLineBreak().type == Token.Type.CLOSE_PARENTHESIS) {
@@ -172,12 +172,12 @@ public class DefParser {
         }
 
         while (true) {
-            FuncParamNode funcParamNode = new FuncParamNode();
-            funcParamNode.paramType = lexer.nextIgnoreLineBreak();
-            if (!isVarType(funcParamNode.paramType.type)) {
-                lexer.error("func param type can't be " + funcParamNode.paramType.type.name());
+            VarSymbol funcParamNode = new VarSymbol();
+            funcParamNode.varType = lexer.nextIgnoreLineBreak();
+            if (!isVarType(funcParamNode.varType.type)) {
+                lexer.error("func param type can't be " + funcParamNode.varType.type.name());
             }
-            funcParamNode.paramName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
+            funcParamNode.varName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
             Token label = lexer.nextIgnoreLineBreak();
             // 判断数组
             if (label.type == Token.Type.L_SQUARE_BRACKET) {
@@ -204,256 +204,144 @@ public class DefParser {
             ;
     }
 
-    private StmtNode stmt() {
-        switch (lexer.peekIgnoreLineBreak().type) {
-            case IF:
-                return ifStmt();
-            case WHILE:
-                return whileStmt();
-            case SWITCH:
-                return switchStmtNode();
-            case BREAK:
-
-            default:
-                return null;
-        }
-    }
-
-    private IfStmtNode ifStmt() {
-        IfStmtNode ifStmtNode = new IfStmtNode();
-        lexer.matchIgnoreLineBreak(Token.Type.IF);
-        lexer.matchIgnoreLineBreak(Token.Type.OPEN_PARENTHESIS);
-        ifStmtNode.condition = skipExpr();
-        lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
-        ifStmtNode.ifStmt = stmt();
-
-        if (lexer.peekIgnoreLineBreak().type == Token.Type.ELSE) {
-            lexer.matchIgnoreLineBreak(Token.Type.ELSE);
-            ifStmtNode.elseStmt = stmt();
-        }
-        return ifStmtNode;
-    }
-
-    private WhileStmtNode whileStmt() {
-        WhileStmtNode whileStmtNode = new WhileStmtNode();
-        lexer.matchIgnoreLineBreak(Token.Type.WHILE);
-        lexer.matchIgnoreLineBreak(Token.Type.OPEN_PARENTHESIS);
-        whileStmtNode.condition = skipExpr();
-        lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
-        whileStmtNode.stmt = stmt();
-        return whileStmtNode;
-    }
-
-    private ForStmtNode forStmtNode() {
-        ForStmtNode forStmt = new ForStmtNode();
-        lexer.matchIgnoreLineBreak(Token.Type.FOR);
-        lexer.matchIgnoreLineBreak(Token.Type.OPEN_PARENTHESIS);
-        forStmt.init = skipExpr();
-        lexer.matchIgnoreLineBreak(Token.Type.SEMICOLON);
-        forStmt.condition = skipExpr();
-        lexer.matchIgnoreLineBreak(Token.Type.SEMICOLON);
-        forStmt.operation = skipExpr();
-        lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
-        forStmt.stmt = stmt();
-        return forStmt;
-    }
-
-    private SwitchStmtNode switchStmtNode() {
-        SwitchStmtNode switchStmt = new SwitchStmtNode();
-        lexer.matchIgnoreLineBreak(Token.Type.SWITCH);
-        lexer.matchIgnoreLineBreak(Token.Type.OPEN_PARENTHESIS);
-        switchStmt.condition = skipExpr();
-        lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
-
-        lexer.matchIgnoreLineBreak(Token.Type.L_CURLY_BRACKET);
-        Token token = lexer.peekIgnoreLineBreak();
-        List<CaseStmtNode> caseStmtNodes = new LinkedList<>();
-        while (token.type != Token.Type.R_CURLY_BRACKET) {
-            if (token.type == Token.Type.CASE) {
-                CaseStmtNode caseStmt = new CaseStmtNode();
-                lexer.matchIgnoreLineBreak(Token.Type.CASE);
-                // todo case应该取term而不是expr
-                caseStmt.condition = skipExpr();
-                lexer.matchIgnoreLineBreak(Token.Type.COLON);
-                // todo case可以处理多条语句
-                caseStmt.stmt = stmt();
-                if (lexer.peekIgnoreLineBreak().type == Token.Type.BREAK) {
-                    caseStmt.isBreak = true;
-                    lexer.nextIgnoreLineBreak();
-                }
-            } else if (token.type == Token.Type.DEFAULT) {
-                lexer.matchIgnoreLineBreak(Token.Type.DEFAULT);
-                lexer.matchIgnoreLineBreak(Token.Type.COLON);
-                // todo default可以处理多条语句
-                switchStmt.defaultStmt = stmt();
-            } else {
-                lexer.unexpectedToken(token.type);
-            }
-            token = lexer.peekIgnoreLineBreak();
-        }
-        return switchStmt;
-    }
-
     //表达式，默认为赋值表达式
     private void skipExpr() {
-        ExprNode left = condExpr();
+        skipCondExpr();
         Token label = lexer.peekIgnoreLineBreak();
         if (label.type.ordinal() >= Token.Type.ASSIGN.ordinal()
                 && label.type.ordinal() <= Token.Type.RSH_ASSIGN.ordinal()) {
-            Token.Type operator = lexer.nextIgnoreLineBreak().type;
-            ExprNode rightExpr = skipExpr();
-            return new AssignExpr(left, operator, rightExpr);
+            lexer.nextIgnoreLineBreak();
+            skipExpr();
         }
-        return left;
     }
 
-    private ExprNode condExpr() {
-        ExprNode left = logicOrExpr();
+    private void skipCondExpr() {
+        skipLogicOrExpr();
         Token label = lexer.peekIgnoreLineBreak();
         if (label.type == Token.Type.QUESTION_MARK) {
             lexer.nextIgnoreLineBreak();
-            ExprNode trueExpr = skipExpr();
+            skipExpr();
             lexer.matchIgnoreLineBreak(Token.Type.COLON);
-            return new CondExpr(left, trueExpr, condExpr());
+            skipCondExpr();
         }
-        return left;
     }
 
-    // 这是正常写法
-    /*private ExprNode logicOrExpr() {
-        ExprNode left = logicAndExpr();
-        while (lexer.peekIgnoreLineBreak().type == Token.Type.OR) {
-            lexer.nextIgnoreLineBreak();
-            left = new LogicOrExpr(left, logicAndExpr());
-        }
-        return left;
-    }*/
-
-    //这是我的第一想法，用递归代替循环，应该没问题
-    private ExprNode logicOrExpr() {
-        ExprNode left = logicAndExpr();
+    // 这里使用递归代替while循环
+    private void skipLogicOrExpr() {
+        skipLogicAndExpr();
         if (lexer.peekIgnoreLineBreak().type == Token.Type.OR) {
             lexer.nextIgnoreLineBreak();
-            return new LogicOrExpr(left, logicOrExpr());
+            skipLogicOrExpr();
         }
-        return left;
     }
 
-    private ExprNode logicAndExpr() {
-        ExprNode left = bitOrExpr();
+    private void skipLogicAndExpr() {
+        skipBitOrExpr();
         while (lexer.peekIgnoreLineBreak().type == Token.Type.AND) {
             lexer.nextIgnoreLineBreak();
-            left = new LogicAndExpr(left, bitOrExpr());
+            skipBitOrExpr();
         }
-        return left;
     }
 
-    private ExprNode bitOrExpr() {
-        ExprNode left = bitXorExpr();
+    private void skipBitOrExpr() {
+        skipBitXorExpr();
         while (lexer.peekIgnoreLineBreak().type == Token.Type.B_OR) {
             lexer.nextIgnoreLineBreak();
-            left = new BitOrExpr(left, bitXorExpr());
+            skipBitXorExpr();
         }
-        return left;
     }
 
-    private ExprNode bitXorExpr() {
-        ExprNode left = bitAndExpr();
+    private void skipBitXorExpr() {
+        skipBitAndExpr();
         while (lexer.peekIgnoreLineBreak().type == Token.Type.B_XOR) {
             lexer.nextIgnoreLineBreak();
-            left = new BitXorExpr(left, bitAndExpr());
+            skipBitAndExpr();
         }
-        return left;
     }
 
-    private ExprNode bitAndExpr() {
-        ExprNode left = equalityExpr();
+    private void skipBitAndExpr() {
+        skipEqualityExpr();
         while (lexer.peekIgnoreLineBreak().type == Token.Type.B_AND) {
             lexer.nextIgnoreLineBreak();
-            left = new BitAndExpr(left, equalityExpr());
+            skipEqualityExpr();
         }
-        return left;
     }
 
-    private ExprNode equalityExpr() {
-        ExprNode left = relationExpr();
+    private void skipEqualityExpr() {
+        skipRelationExpr();
         while (lexer.peekIgnoreLineBreak().type == Token.Type.EQ
                 || lexer.peekIgnoreLineBreak().type == Token.Type.NE) {
-            left = new EqualityExpr(left, lexer.nextIgnoreLineBreak().type, relationExpr());
+            lexer.nextIgnoreLineBreak();
+            skipRelationExpr();
         }
-        return left;
     }
 
-    private ExprNode relationExpr() {
-        ExprNode expr = shiftExpr();
+    private void skipRelationExpr() {
+        skipShiftExpr();
         while (lexer.peekIgnoreLineBreak().type.ordinal() >= Token.Type.GT.ordinal()
                 && lexer.peekIgnoreLineBreak().type.ordinal() <= Token.Type.LT.ordinal()) {
-            expr = new RelationExpr(expr, lexer.nextIgnoreLineBreak().type, shiftExpr());
+            lexer.nextIgnoreLineBreak();
+            skipShiftExpr();
         }
-        return expr;
     }
 
-    private ExprNode shiftExpr() {
-        ExprNode expr = addOrSubExpr();
+    private void skipShiftExpr() {
+        skipAddOrSubExpr();
         while (lexer.peekIgnoreLineBreak().type == Token.Type.LSH
                 || lexer.peekIgnoreLineBreak().type == Token.Type.RSH) {
-            expr = new ShiftExpr(expr, lexer.nextIgnoreLineBreak().type, addOrSubExpr());
+            lexer.nextIgnoreLineBreak();
+            skipAddOrSubExpr();
         }
-        return expr;
     }
 
-    private ExprNode addOrSubExpr() {
-        ExprNode expr = mulOrDivExpr();
+    private void skipAddOrSubExpr() {
+        skipMulOrDivExpr();
         while (lexer.peekIgnoreLineBreak().type == Token.Type.ADD
                 || lexer.peekIgnoreLineBreak().type == Token.Type.SUB) {
-            expr = new AddOrSubExpr(expr, lexer.nextIgnoreLineBreak().type, mulOrDivExpr());
+            lexer.nextIgnoreLineBreak();
+            skipMulOrDivExpr();
         }
-        return expr;
     }
 
-    private ExprNode mulOrDivExpr() {
-        ExprNode left = suffixUnaryExpr();
+    private void skipMulOrDivExpr() {
+        skipSuffixUnaryExpr();
         while (lexer.peekIgnoreLineBreak().type == Token.Type.MUL
                 || lexer.peekIgnoreLineBreak().type == Token.Type.DIV) {
-            left = new MulOrDivExpr(left, lexer.nextIgnoreLineBreak().type, suffixUnaryExpr());
+            lexer.nextIgnoreLineBreak();
+            skipSuffixUnaryExpr();
         }
-        return left;
     }
 
-    private ExprNode suffixUnaryExpr() {
-        ExprNode expr = prefixUnaryExpr();
+    private void skipSuffixUnaryExpr() {
+        skipPrefixUnaryExpr();
         if (lexer.peekIgnoreLineBreak().type == Token.Type.INC
                 || lexer.peekIgnoreLineBreak().type == Token.Type.DEC) {
-            return new SuffixUnaryExpr(expr, lexer.nextIgnoreLineBreak().type);
+            lexer.nextIgnoreLineBreak();
         }
-        return expr;
     }
 
-    private ExprNode prefixUnaryExpr() {
+    private void skipPrefixUnaryExpr() {
         Token.Type labelType = lexer.peekIgnoreLineBreak().type;
         // 取反，取非，都是可递归的
         if (labelType == Token.Type.TILDE || labelType == Token.Type.NOT) {
-            return new PrefixUnaryExpr(lexer.nextIgnoreLineBreak().type, prefixUnaryExpr());
+            lexer.nextIgnoreLineBreak();
+            skipPrefixUnaryExpr();
         } else if (labelType == Token.Type.INC // 这些操作符不可递归
                 || labelType == Token.Type.DEC
                 || labelType == Token.Type.SUB) {
-            return new PrefixUnaryExpr(lexer.nextIgnoreLineBreak().type, factorExpr());
+           lexer.nextIgnoreLineBreak();
+           skipFactorExpr();
         }
-        //todo 强转
-        return factorExpr();
+        skipFactorExpr();
     }
 
-    private ExprNode factorExpr() {
-        // 读取的token列表，函数结束时要back回去
-        List<Token> tokens = new LinkedList<>();
+    private void skipFactorExpr() {
         Token token = lexer.nextIgnoreLineBreak();
         if (token.type == Token.Type.NUMBER_VAL
                 || token.type == Token.Type.STRING_VAL
                 || token.type == Token.Type.DOUBLE_VAL
                 || token.type == Token.Type.FLOAT_VAL
                 || token.type == Token.Type.CHAR_VAL) {
-
         }
-        return null;
     }
 }

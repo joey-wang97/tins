@@ -10,4 +10,8 @@ public class SymbolTable {
     public static List<VarSymbol> varSymbols;
     public static List<StructSymbol> structSymbols;
     public static List<FuncSymbol> funcSymbols;
+
+    public static void print() {
+
+    }
 }
