@@ -89,11 +89,11 @@ suffixUnaryExpr = prefixUnaryExpr '++'
                 | prefixUnaryExpr '--'
                 | prefixUnaryExpr
 
-prefixUnaryExpr = '-' factorExpr
-                | '~' prefixUnaryExpr
+prefixUnaryExpr = '~' prefixUnaryExpr
+                | '!' prefixUnaryExpr
                 | '++' factorExpr
                 | '--' factorExpr
-                | '!' prefixUnaryExpr
+                | '-' factorExpr
                 | '(' TYPE ')' prefixUnaryExpr
                 | factorExpr
 
@@ -101,7 +101,9 @@ factorExpr = factorExpr '.' ID
            | factorExpr '[' expr ']'
            | callFuncExpr
            | ID
-           | NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL
+           | primary
            | '(' expr ')'
+
+primaryExpr = NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL
 
 callFuncExpr = ID '(' param ')'

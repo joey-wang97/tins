@@ -3,6 +3,8 @@ package cn.tianyu.tins;
 import cn.tianyu.tins.ast.*;
 import cn.tianyu.tins.ast.expr.*;
 import cn.tianyu.tins.ast.stmt.*;
+import cn.tianyu.tins.symbol.StructSymbol;
+import cn.tianyu.tins.symbol.SymbolTable;
 import cn.tianyu.tins.type.Token;
 
 import java.util.ArrayList;
@@ -211,13 +213,19 @@ public class Parser {
                 return ifStmt();
             case WHILE:
                 return whileStmt();
+            case FOR:
+                return forStmtNode();
             case SWITCH:
                 return switchStmtNode();
             case BREAK:
-
-            default:
-                return null;
+                return new BreakStmtNode();
+            case CONTINUE:
+                return new ContinueStmtNode();
+            case RETURN:
+                return new ReturnStmtNode(expr());
         }
+        lexer.unexpectedToken(lexer.peekIgnoreLineBreak().type);
+        return null;
     }
 
     private IfStmtNode ifStmt() {
@@ -439,22 +447,73 @@ public class Parser {
                 || labelType == Token.Type.DEC
                 || labelType == Token.Type.SUB) {
             return new PrefixUnaryExpr(lexer.nextIgnoreLineBreak().type, factorExpr());
+        } else if (labelType == Token.Type.OPEN_PARENTHESIS) {
+            Token token = lexer.lookAheadIgnoreLineBreak(1);
+            if (isVarType(token.type) || isCastType(token)) {
+                return new CastExpr(token, prefixUnaryExpr());
+            }
         }
-        //todo 强转
         return factorExpr();
     }
 
     private ExprNode factorExpr() {
-        // 读取的token列表，函数结束时要back回去
-        List<Token> tokens = new LinkedList<>();
         Token token = lexer.nextIgnoreLineBreak();
         if (token.type == Token.Type.NUMBER_VAL
                 || token.type == Token.Type.STRING_VAL
                 || token.type == Token.Type.DOUBLE_VAL
                 || token.type == Token.Type.FLOAT_VAL
                 || token.type == Token.Type.CHAR_VAL) {
-
+            return new PrimaryExpr(token);
+        } else if (token.type == Token.Type.IDENTIFIER) {
+            // 函数调用不可换行
+            if (lexer.peek().type == Token.Type.OPEN_PARENTHESIS) {
+                return callFuncExpr(token.name);
+            } else {
+                return new VarExpr(token.name);
+            }
+        } else if(token.type == Token.Type.OPEN_PARENTHESIS) {
+            ExprNode exprNode = expr();
+            lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
+            return new ParenthesisExpr(exprNode);
         }
+        // todo factorExpr的后续
         return null;
+    }
+
+    public CallFuncExprNode callFuncExpr(String funcName) {
+        // 函数调用不可换行
+        lexer.match(Token.Type.OPEN_PARENTHESIS);
+        List<ExprNode> params = new LinkedList<>();
+        // 空函数参数
+        if (lexer.peekIgnoreLineBreak().type == Token.Type.CLOSE_PARENTHESIS) {
+            lexer.nextIgnoreLineBreak();
+            return new CallFuncExprNode(funcName, params);
+        }
+        while (true) {
+            ExprNode exprNode = expr();
+            Token.Type labelType = lexer.nextIgnoreLineBreak().type;
+            params.add(exprNode);
+            if (labelType == Token.Type.CLOSE_PARENTHESIS) {
+                break;
+            } else if (labelType != Token.Type.COMMA) {
+                lexer.unexpectedToken(labelType);
+            }
+        }
+        return new CallFuncExprNode(funcName, params);
+    }
+
+    /**
+     * 判断token是否强转的类型
+     * 即是否struct的name
+     */
+    public boolean isCastType(Token token) {
+        if (token.type != Token.Type.IDENTIFIER) {
+            return false;
+        }
+        for (StructSymbol structSymbol : SymbolTable.structSymbols) {
+            if (structSymbol.name.equals(token.name))
+                return true;
+        }
+        return false;
     }
 }

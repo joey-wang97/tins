@@ -34,6 +34,7 @@ public class Token {
         CASE,
         DEFAULT,
         BREAK,
+        CONTINUE,
         MAIN,
         IMPORT,
         THIS,
