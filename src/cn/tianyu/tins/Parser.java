@@ -457,26 +457,43 @@ public class Parser {
     }
 
     private ExprNode factorExpr() {
+        ExprNode expr = null;
         Token token = lexer.nextIgnoreLineBreak();
         if (token.type == Token.Type.NUMBER_VAL
                 || token.type == Token.Type.STRING_VAL
                 || token.type == Token.Type.DOUBLE_VAL
                 || token.type == Token.Type.FLOAT_VAL
                 || token.type == Token.Type.CHAR_VAL) {
-            return new PrimaryExpr(token);
+            expr = new PrimaryExpr(token);
         } else if (token.type == Token.Type.IDENTIFIER) {
             // 函数调用不可换行
             if (lexer.peek().type == Token.Type.OPEN_PARENTHESIS) {
-                return callFuncExpr(token.name);
+                expr = callFuncExpr(token.name);
             } else {
-                return new VarExpr(token.name);
+                expr = new IdentifierExpr(token.name);
             }
-        } else if(token.type == Token.Type.OPEN_PARENTHESIS) {
-            ExprNode exprNode = expr();
+        } else if (token.type == Token.Type.OPEN_PARENTHESIS) {
+            ExprNode innerExpr = expr();
             lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
-            return new ParenthesisExpr(exprNode);
+            expr = new ParenthesisExpr(innerExpr);
         }
-        // todo factorExpr的后续
+        if (expr != null) {
+            List<FactorExpr.NextExpr> nextExprList = new ArrayList<>();
+            while (true) {
+                Token.Type labelType = lexer.peekIgnoreLineBreak().type;
+                if (labelType == Token.Type.COMMA) { // id.id.id.id
+                    lexer.nextIgnoreLineBreak();
+                    nextExprList.add(new FactorExpr.NextExpr(lexer.match(Token.Type.IDENTIFIER).name));
+                } else if (labelType == Token.Type.L_SQUARE_BRACKET) { // id[expr][expr][expr]
+                    lexer.nextIgnoreLineBreak();
+                    nextExprList.add(new FactorExpr.NextExpr(expr()));
+                } else {
+                    break;
+                }
+            }
+            return new FactorExpr(expr, nextExprList);
+        }
+        // todo 这里是否不可能为空?
         return null;
     }
 
