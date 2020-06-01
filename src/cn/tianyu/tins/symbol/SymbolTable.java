@@ -11,7 +11,9 @@ public class SymbolTable {
     public static List<StructSymbol> structSymbols;
     public static List<FuncSymbol> funcSymbols;
 
-    public static void print() {
-
+    public static void dumpSymbol() {
+        varSymbols.forEach(System.out::println);
+        structSymbols.forEach(System.out::println);
+        funcSymbols.forEach(System.out::println);
     }
 }

@@ -30,6 +30,8 @@ public class Lexer {
         while ((token = readNextTokenFromSrc()).type != Token.Type.END) {
             readTokens.add(token);
         }
+        // 添加最后一个Token[END]
+        readTokens.add(token);
     }
 
     /**
@@ -57,13 +59,15 @@ public class Lexer {
      * 向前看n个非换行符token
      */
     public Token lookAheadIgnoreLineBreak(int n) {
+        // todo!
         int p = tokenPosition;
-        for (int i = 0; i < n;) {
+        while (readTokens.get(p).type == Token.Type.LINE_BREAK)
+            p++;
+        for (int i = 0; i < n;i++) {
             while (readTokens.get(p).type == Token.Type.LINE_BREAK)
                 p++;
-            i++;
         }
-        return readTokens.get(p);
+        return readTokens.get(p+n);
     }
 
     public Token match(Token.Type type) {
@@ -90,9 +94,9 @@ public class Lexer {
      * 遇到换行符则继续
      */
     public Token nextIgnoreLineBreak() {
-        Token token = readTokens.get(tokenPosition);
+        Token token = readTokens.get(tokenPosition++);
         while (token.type == Token.Type.LINE_BREAK) {
-            token = readTokens.get(++tokenPosition);
+            token = readTokens.get(tokenPosition++);
         }
         return token;
     }
@@ -312,7 +316,6 @@ public class Lexer {
             System.exit(-1);
         }
         col += srcPosition - oldPosition + 1;
-        readTokens.add(token);
         return token;
     }
 

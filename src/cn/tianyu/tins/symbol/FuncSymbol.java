@@ -11,4 +11,13 @@ public class FuncSymbol {
     public Token funcType;
     public String funcName;
     public List<VarSymbol> params;
+
+    @Override
+    public String toString() {
+        return "FuncSymbol{" +
+                "funcType=" + funcType +
+                ", funcName='" + funcName + '\'' +
+                ", params=" + params.size() +
+                '}';
+    }
 }

@@ -9,4 +9,12 @@ import java.util.List;
 public class StructSymbol {
     public String name;
     public List<VarSymbol> fieldSymbols = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return "StructSymbol{" +
+                "name='" + name + '\'' +
+                ", fieldSymbols=" + fieldSymbols.size() +
+                '}';
+    }
 }

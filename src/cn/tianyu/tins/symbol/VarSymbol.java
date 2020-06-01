@@ -11,4 +11,14 @@ public class VarSymbol {
     public String varName;
     public boolean isArr;
     public Object value;
+
+    @Override
+    public String toString() {
+        return "VarSymbol{" +
+                "varType=" + varType +
+                ", varName='" + varName + '\'' +
+                ", isArr=" + isArr +
+                ", value=" + value +
+                '}';
+    }
 }

@@ -1,7 +1,6 @@
 package cn.tianyu.tins;
 
 import cn.tianyu.tins.ast.*;
-import cn.tianyu.tins.ast.stmt.*;
 import cn.tianyu.tins.symbol.FuncSymbol;
 import cn.tianyu.tins.symbol.StructSymbol;
 import cn.tianyu.tins.symbol.SymbolTable;
@@ -40,7 +39,7 @@ public class DefParser {
                 SymbolTable.varSymbols.addAll(varDefs());
             }
         }
-        SymbolTable.print();
+        SymbolTable.dumpSymbol();
     }
 
     private boolean isLineEnd(Token.Type type) {

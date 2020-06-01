@@ -23,6 +23,8 @@ public class Parser {
 
         DefParser defParser = new DefParser(lexer);
         defParser.preParser();
+        // 输出符号表
+        SymbolTable.dumpSymbol();
 
         TopDefNode top = new TopDefNode();
 
@@ -477,6 +479,7 @@ public class Parser {
             lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
             expr = new ParenthesisExpr(innerExpr);
         }
+        // 处理文法递归
         if (expr != null) {
             List<FactorExpr.NextExpr> nextExprList = new ArrayList<>();
             while (true) {
@@ -493,7 +496,7 @@ public class Parser {
             }
             return new FactorExpr(expr, nextExprList);
         }
-        // todo 这里是否不可能为空?
+        lexer.error("expr cannot be null!");
         return null;
     }
 
