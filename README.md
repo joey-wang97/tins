@@ -5,7 +5,7 @@ simple and powerful, without gc, vm... so it's fast.
 
 ## todo
 #### lexer
-- lookAhead!
+- line, col
 #### DefParser and Parser
 - 数组长度表达式
 - 数组赋值表达式

@@ -59,15 +59,13 @@ public class Lexer {
      * 向前看n个非换行符token
      */
     public Token lookAheadIgnoreLineBreak(int n) {
-        // todo!
         int p = tokenPosition;
-        while (readTokens.get(p).type == Token.Type.LINE_BREAK)
-            p++;
         for (int i = 0; i < n;i++) {
+            p++;
             while (readTokens.get(p).type == Token.Type.LINE_BREAK)
                 p++;
         }
-        return readTokens.get(p+n);
+        return readTokens.get(p);
     }
 
     public Token match(Token.Type type) {
@@ -79,14 +77,10 @@ public class Lexer {
     }
 
     public Token matchIgnoreLineBreak(Token.Type type) {
-        Token token;
-        while ((token = readTokens.get(tokenPosition)).type == Token.Type.LINE_BREAK) {
+        while (readTokens.get(tokenPosition).type == Token.Type.LINE_BREAK) {
             tokenPosition++;
         }
-        if (token.type != type) {
-            unexpectedToken(token.type, type);
-        }
-        return token;
+        return match(type);
     }
 
     /**
