@@ -7,6 +7,7 @@ public class Token {
     public Type type;
     public String name;
     public Object value;
+    public int line, col;
 
     public enum Type {
         IDENTIFIER,

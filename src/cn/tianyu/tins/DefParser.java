@@ -63,7 +63,7 @@ public class DefParser {
                 if (isLineEnd(label.type))
                     break;
                 else if (label.type != Token.Type.DOT)
-                    lexer.unexpectedToken(label.type, Token.Type.DOT);
+                    lexer.unexpectedToken(label, Token.Type.DOT);
             }
             list.add(importNode);
         }
@@ -93,7 +93,7 @@ public class DefParser {
         Token funcType = lexer.nextIgnoreLineBreak();
         // 检查函数类型是否合法
         if (!isVarType(funcType.type) && funcType.type != Token.Type.VOID)
-            lexer.error("func type can't be " + funcType.name);
+            lexer.error(funcType, "func type can't be " + funcType.name);
         funcDefNode.funcType = funcType;
         funcDefNode.funcName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
         funcDefNode.params = funParam();
@@ -132,7 +132,7 @@ public class DefParser {
             } else if (label.type == Token.Type.COMMA) {
                 lexer.next();
             } else {
-                lexer.unexpectedToken(label.type);
+                lexer.unexpectedToken(label);
             }
         }
         return list;
@@ -174,7 +174,7 @@ public class DefParser {
             VarSymbol funcParamNode = new VarSymbol();
             funcParamNode.varType = lexer.nextIgnoreLineBreak();
             if (!isVarType(funcParamNode.varType.type)) {
-                lexer.error("func param type can't be " + funcParamNode.varType.type.name());
+                lexer.error(funcParamNode.varType,"func param type can't be " + funcParamNode.varType.type.name());
             }
             funcParamNode.varName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
             Token label = lexer.nextIgnoreLineBreak();
@@ -191,7 +191,7 @@ public class DefParser {
             } else if (label.type == Token.Type.COMMA) {
                 nodes.add(funcParamNode);
             } else {
-                lexer.unexpectedToken(label.type);
+                lexer.unexpectedToken(label);
             }
         }
         return nodes;
@@ -328,8 +328,8 @@ public class DefParser {
         } else if (labelType == Token.Type.INC // 这些操作符不可递归
                 || labelType == Token.Type.DEC
                 || labelType == Token.Type.SUB) {
-           lexer.nextIgnoreLineBreak();
-           skipFactorExpr();
+            lexer.nextIgnoreLineBreak();
+            skipFactorExpr();
         }
         skipFactorExpr();
     }

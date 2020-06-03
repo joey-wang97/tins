@@ -17,7 +17,7 @@ public class Main {
         Lexer lexer = new Lexer(fileName);
         Token token = lexer.next();
         while (token.type != Token.Type.END) {
-            System.out.println(lexer.line+" "+token.type.name());
+            System.out.println(token.line + "," + token.col + " " + token.type.name());
             token = lexer.next();
         }
         // System.out.println(lexer.peekIgnoreLineBreak().type.name());

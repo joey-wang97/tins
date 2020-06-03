@@ -15,7 +15,8 @@ public class Lexer {
      * 源文件中读取的位置
      */
     int srcPosition = 0;
-    int line = 1, col = 0;
+    int newLineStartPosition = 0;
+    int line = 1, col = 0, tempCol = 0;
 
     List<Token> readTokens = new LinkedList<>();
     /**
@@ -32,13 +33,6 @@ public class Lexer {
         }
         // 添加最后一个Token[END]
         readTokens.add(token);
-    }
-
-    /**
-     * 使词法分析器重新从第一个token开始next
-     */
-    public void moveToHead() {
-        tokenPosition = 0;
     }
 
     public Token peek() {
@@ -60,7 +54,7 @@ public class Lexer {
      */
     public Token lookAheadIgnoreLineBreak(int n) {
         int p = tokenPosition;
-        for (int i = 0; i < n;i++) {
+        for (int i = 0; i < n; i++) {
             p++;
             while (readTokens.get(p).type == Token.Type.LINE_BREAK)
                 p++;
@@ -71,7 +65,7 @@ public class Lexer {
     public Token match(Token.Type type) {
         Token token = readTokens.get(tokenPosition++);
         if (token.type != type) {
-            unexpectedToken(token.type, type);
+            unexpectedToken(token, type);
         }
         return token;
     }
@@ -142,15 +136,16 @@ public class Lexer {
             return token;
         }
 
+        int tabCount = 0;
+
         char c;
         while (((c = charAt(srcPosition++)) == ' ' || c == '\t')) {
-            col++;
             if (c == '\t')
-                col += 3;
+                tabCount++;
         }
 
-        // 当前正在读的位置
-        int oldPosition = srcPosition - 1;
+        // srcPosition此次开始读取的位置
+        int tempSrcPosition = srcPosition - 1;
 
         // identifier
         if (Character.isLetter(c) || c == '_') {
@@ -158,7 +153,7 @@ public class Lexer {
             while (Character.isLetter(c) || Character.isDigit(c)) {
                 c = charAt(++srcPosition);
             }
-            String name = src.substring(oldPosition, srcPosition);
+            String name = src.substring(tempSrcPosition, srcPosition);
             token.type = checkTokenType(name);
             if (token.type == Token.Type.IDENTIFIER)
                 token.name = name;
@@ -182,7 +177,7 @@ public class Lexer {
             if (charAt(srcPosition) == '+') {
                 srcPosition++;
                 token.type = Token.Type.INC;
-            } else if (charAt(srcPosition) =='=') {
+            } else if (charAt(srcPosition) == '=') {
                 srcPosition++;
                 token.type = Token.Type.ADD_ASSIGN;
             }
@@ -191,7 +186,7 @@ public class Lexer {
             if (charAt(srcPosition) == '-') {
                 srcPosition++;
                 token.type = Token.Type.DEC;
-            } else if (charAt(srcPosition) =='=') {
+            } else if (charAt(srcPosition) == '=') {
                 srcPosition++;
                 token.type = Token.Type.SUB_ASSIGN;
             }
@@ -273,9 +268,9 @@ public class Lexer {
             token.type = Token.Type.COMMA;
         } else if (c == '?') {
             token.type = Token.Type.QUESTION_MARK;
-        }  else if (c == '~') {
+        } else if (c == '~') {
             token.type = Token.Type.BIT_REVERSE;
-        }  else if (c == '.') {
+        } else if (c == '.') {
             token.type = Token.Type.DOT;
         } else if (c == ':') {
             token.type = Token.Type.COLON;
@@ -301,15 +296,18 @@ public class Lexer {
             }
         } else if (c == '\n') {
             token.type = Token.Type.LINE_BREAK;
-            // 遇到换行符时，oldPosition还停留在换行符，计算col时，会将换行符也算上，所以此处往后移动一个字符
-            oldPosition++;
-            line++;
             col = 0;
         } else {
-            System.err.println(String.format("lex error at line %d:%d, unexpected char: %c(%d)", line, col, charAt(oldPosition), (int) charAt(oldPosition)));
-            System.exit(-1);
+            error(String.format("lex error at line %d:%d, unexpected char: %c(%d)", line, col, charAt(tempSrcPosition), (int) charAt(tempSrcPosition)));
         }
-        col += srcPosition - oldPosition + 1;
+        // 将行号和列号保存到对应token中，顺序不能更改
+        token.line = line;
+
+        token.col = tempSrcPosition + tabCount * 3 - newLineStartPosition + 1;
+        if (token.type == Token.Type.LINE_BREAK) {
+            line++;
+            newLineStartPosition = srcPosition;
+        }
         return token;
     }
 
@@ -390,15 +388,30 @@ public class Lexer {
         return Token.Type.IDENTIFIER;
     }
 
-    public void unexpectedToken(Token.Type unexpectedType) {
-        error("unexpected token type: " + unexpectedType.name());
+    public void unexpectedToken(Token unexpectedToken) {
+        error(unexpectedToken, "unexpected token type: " + unexpectedToken.type.name());
     }
 
-    public void unexpectedToken(Token.Type unexpectedType, Token.Type expectedType) {
-        error("unexpected token type: " + unexpectedType.name() + ", expected is: " + expectedType.name());
+    public void unexpectedToken(Token unexpectedToken, Token.Type expectedType) {
+        error(unexpectedToken, "unexpected token type: " + unexpectedToken.type.name() + ", expected is: " + expectedType.name());
     }
 
-    public void error(String str) {
+    /**
+     * 当非lexer组件发生错误时，使用此error
+     *
+     * @param token 发生错误的token
+     * @param str   错误信息
+     */
+    public void error(Token token, String str) {
+        throw new RuntimeException(String.format("at line %d:%d, %s", token.line, token.col, str));
+    }
+
+    /**
+     * 当lexer发生error时，使用这个函数
+     *
+     * @param str
+     */
+    private void error(String str) {
         throw new RuntimeException(String.format("at line %d:%d, %s", line, col, str));
     }
 

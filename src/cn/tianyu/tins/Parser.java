@@ -66,7 +66,7 @@ public class Parser {
                 if (isLineEnd(label.type))
                     break;
                 else if (label.type != Token.Type.DOT)
-                    lexer.unexpectedToken(label.type, Token.Type.DOT);
+                    lexer.unexpectedToken(label, Token.Type.DOT);
             }
             list.add(importNode);
         }
@@ -96,7 +96,7 @@ public class Parser {
         Token funcType = lexer.nextIgnoreLineBreak();
         // 检查函数类型是否合法
         if (!isVarType(funcType.type) && funcType.type != Token.Type.VOID)
-            lexer.error("func type can't be " + funcType.name);
+            lexer.error(funcType, "func type can't be " + funcType.name);
         funcDefNode.funcType = funcType;
         funcDefNode.funcName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
         funcDefNode.paramNode = funParam();
@@ -176,7 +176,7 @@ public class Parser {
             FuncParamNode funcParamNode = new FuncParamNode();
             funcParamNode.paramType = lexer.nextIgnoreLineBreak();
             if (!isVarType(funcParamNode.paramType.type)) {
-                lexer.error("func param type can't be " + funcParamNode.paramType.type.name());
+                lexer.error(funcParamNode.paramType, "func param type can't be " + funcParamNode.paramType.type.name());
             }
             funcParamNode.paramName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
             Token label = lexer.nextIgnoreLineBreak();
@@ -193,7 +193,7 @@ public class Parser {
             } else if (label.type == Token.Type.COMMA) {
                 nodes.add(funcParamNode);
             } else {
-                lexer.unexpectedToken(label.type);
+                lexer.unexpectedToken(label);
             }
         }
         return nodes;
@@ -226,7 +226,7 @@ public class Parser {
             case RETURN:
                 return new ReturnStmtNode(expr());
         }
-        lexer.unexpectedToken(lexer.peekIgnoreLineBreak().type);
+        lexer.unexpectedToken(lexer.peekIgnoreLineBreak());
         return null;
     }
 
@@ -298,7 +298,7 @@ public class Parser {
                 // todo default可以处理多条语句
                 switchStmt.defaultStmt = stmt();
             } else {
-                lexer.unexpectedToken(token.type);
+                lexer.unexpectedToken(token);
             }
             token = lexer.peekIgnoreLineBreak();
         }
@@ -496,7 +496,7 @@ public class Parser {
             }
             return new FactorExpr(expr, nextExprList);
         }
-        lexer.error("expr cannot be null!");
+        lexer.error(token,"expr cannot be null!");
         return null;
     }
 
@@ -511,12 +511,12 @@ public class Parser {
         }
         while (true) {
             ExprNode exprNode = expr();
-            Token.Type labelType = lexer.nextIgnoreLineBreak().type;
+            Token label = lexer.nextIgnoreLineBreak();
             params.add(exprNode);
-            if (labelType == Token.Type.CLOSE_PARENTHESIS) {
+            if (label.type == Token.Type.CLOSE_PARENTHESIS) {
                 break;
-            } else if (labelType != Token.Type.COMMA) {
-                lexer.unexpectedToken(labelType);
+            } else if (label.type != Token.Type.COMMA) {
+                lexer.unexpectedToken(label);
             }
         }
         return new CallFuncExprNode(funcName, params);
