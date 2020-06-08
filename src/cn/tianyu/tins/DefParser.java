@@ -1,6 +1,6 @@
 package cn.tianyu.tins;
 
-import cn.tianyu.tins.ast.*;
+import cn.tianyu.tins.ast.ImportNode;
 import cn.tianyu.tins.symbol.FuncSymbol;
 import cn.tianyu.tins.symbol.StructSymbol;
 import cn.tianyu.tins.symbol.SymbolTable;
@@ -33,7 +33,7 @@ public class DefParser {
         while (lexer.peekIgnoreLineBreak().type != Token.Type.END) {
             if (lexer.peekIgnoreLineBreak().type == Token.Type.STRUCT) {
                 SymbolTable.structSymbols.add(structDef());
-            } else if (lexer.lookAheadIgnoreLineBreak(3).type == Token.Type.OPEN_PARENTHESIS) {
+            } else if (lexer.peekIgnoreLineBreak().type == Token.Type.FUNC) {
                 SymbolTable.funcSymbols.add(funcDef());
             } else {
                 SymbolTable.varSymbols.addAll(varDefs());
@@ -101,6 +101,8 @@ public class DefParser {
         return funcDefNode;
     }
 
+    int a = 1;
+
     /**
      * 一行代码可能定义多个变量
      */
@@ -108,7 +110,7 @@ public class DefParser {
         List<VarSymbol> list = new ArrayList<>();
 
         // 数组定义
-        if (lexer.lookAheadIgnoreLineBreak(3).type == Token.Type.L_SQUARE_BRACKET) {
+        if (lexer.lookAheadIgnoreLineBreak(2).type == Token.Type.L_SQUARE_BRACKET) {
             // 一次只能定义一个数组
             list.add(arrDef());
             return list;
@@ -122,13 +124,15 @@ public class DefParser {
             varSymbol.varName = lexer.match(Token.Type.IDENTIFIER).name;
             // 检查后面的符号，不可换行
             Token label = lexer.peek();
-
-            if (isLineEnd(label.type)) {
-                list.add(varSymbol);
-                break;
-            } else if (label.type == Token.Type.ASSIGN) {
+            if (label.type == Token.Type.ASSIGN) {
                 lexer.next();
                 skipExpr();
+                label = lexer.peek();
+            }
+
+            list.add(varSymbol);
+            if (isLineEnd(label.type)) {
+                break;
             } else if (label.type == Token.Type.COMMA) {
                 lexer.next();
             } else {
@@ -174,7 +178,7 @@ public class DefParser {
             VarSymbol funcParamNode = new VarSymbol();
             funcParamNode.varType = lexer.nextIgnoreLineBreak();
             if (!isVarType(funcParamNode.varType.type)) {
-                lexer.error(funcParamNode.varType,"func param type can't be " + funcParamNode.varType.type.name());
+                lexer.error(funcParamNode.varType, "func param type can't be " + funcParamNode.varType.type.name());
             }
             funcParamNode.varName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
             Token label = lexer.nextIgnoreLineBreak();
@@ -185,12 +189,10 @@ public class DefParser {
                 label = lexer.nextIgnoreLineBreak();
             }
 
+            nodes.add(funcParamNode);
             if (label.type == Token.Type.CLOSE_PARENTHESIS) {
-                nodes.add(funcParamNode);
                 break;
-            } else if (label.type == Token.Type.COMMA) {
-                nodes.add(funcParamNode);
-            } else {
+            } else if (label.type != Token.Type.COMMA) {
                 lexer.unexpectedToken(label);
             }
         }
@@ -206,19 +208,19 @@ public class DefParser {
     //表达式，默认为赋值表达式
     private void skipExpr() {
         skipCondExpr();
-        Token label = lexer.peekIgnoreLineBreak();
+        Token label = lexer.peek();
         if (label.type.ordinal() >= Token.Type.ASSIGN.ordinal()
                 && label.type.ordinal() <= Token.Type.RSH_ASSIGN.ordinal()) {
-            lexer.nextIgnoreLineBreak();
+            lexer.next();
             skipExpr();
         }
     }
 
     private void skipCondExpr() {
         skipLogicOrExpr();
-        Token label = lexer.peekIgnoreLineBreak();
+        Token label = lexer.peek();
         if (label.type == Token.Type.QUESTION_MARK) {
-            lexer.nextIgnoreLineBreak();
+            lexer.next();
             skipExpr();
             lexer.matchIgnoreLineBreak(Token.Type.COLON);
             skipCondExpr();
@@ -228,48 +230,48 @@ public class DefParser {
     // 这里使用递归代替while循环
     private void skipLogicOrExpr() {
         skipLogicAndExpr();
-        if (lexer.peekIgnoreLineBreak().type == Token.Type.OR) {
-            lexer.nextIgnoreLineBreak();
+        if (lexer.peek().type == Token.Type.OR) {
+            lexer.next();
             skipLogicOrExpr();
         }
     }
 
     private void skipLogicAndExpr() {
         skipBitOrExpr();
-        while (lexer.peekIgnoreLineBreak().type == Token.Type.AND) {
-            lexer.nextIgnoreLineBreak();
+        while (lexer.peek().type == Token.Type.AND) {
+            lexer.next();
             skipBitOrExpr();
         }
     }
 
     private void skipBitOrExpr() {
         skipBitXorExpr();
-        while (lexer.peekIgnoreLineBreak().type == Token.Type.B_OR) {
-            lexer.nextIgnoreLineBreak();
+        while (lexer.peek().type == Token.Type.B_OR) {
+            lexer.next();
             skipBitXorExpr();
         }
     }
 
     private void skipBitXorExpr() {
         skipBitAndExpr();
-        while (lexer.peekIgnoreLineBreak().type == Token.Type.B_XOR) {
-            lexer.nextIgnoreLineBreak();
+        while (lexer.peek().type == Token.Type.B_XOR) {
+            lexer.next();
             skipBitAndExpr();
         }
     }
 
     private void skipBitAndExpr() {
         skipEqualityExpr();
-        while (lexer.peekIgnoreLineBreak().type == Token.Type.B_AND) {
-            lexer.nextIgnoreLineBreak();
+        while (lexer.peek().type == Token.Type.B_AND) {
+            lexer.next();
             skipEqualityExpr();
         }
     }
 
     private void skipEqualityExpr() {
         skipRelationExpr();
-        while (lexer.peekIgnoreLineBreak().type == Token.Type.EQ
-                || lexer.peekIgnoreLineBreak().type == Token.Type.NE) {
+        while (lexer.peek().type == Token.Type.EQ
+                || lexer.peek().type == Token.Type.NE) {
             lexer.nextIgnoreLineBreak();
             skipRelationExpr();
         }
@@ -277,45 +279,45 @@ public class DefParser {
 
     private void skipRelationExpr() {
         skipShiftExpr();
-        while (lexer.peekIgnoreLineBreak().type.ordinal() >= Token.Type.GT.ordinal()
-                && lexer.peekIgnoreLineBreak().type.ordinal() <= Token.Type.LT.ordinal()) {
-            lexer.nextIgnoreLineBreak();
+        while (lexer.peek().type.ordinal() >= Token.Type.GT.ordinal()
+                && lexer.peek().type.ordinal() <= Token.Type.LT.ordinal()) {
+            lexer.next();
             skipShiftExpr();
         }
     }
 
     private void skipShiftExpr() {
         skipAddOrSubExpr();
-        while (lexer.peekIgnoreLineBreak().type == Token.Type.LSH
-                || lexer.peekIgnoreLineBreak().type == Token.Type.RSH) {
-            lexer.nextIgnoreLineBreak();
+        while (lexer.peek().type == Token.Type.LSH
+                || lexer.peek().type == Token.Type.RSH) {
+            lexer.next();
             skipAddOrSubExpr();
         }
     }
 
     private void skipAddOrSubExpr() {
         skipMulOrDivExpr();
-        while (lexer.peekIgnoreLineBreak().type == Token.Type.ADD
-                || lexer.peekIgnoreLineBreak().type == Token.Type.SUB) {
-            lexer.nextIgnoreLineBreak();
+        while (lexer.peek().type == Token.Type.ADD
+                || lexer.peek().type == Token.Type.SUB) {
+            lexer.next();
             skipMulOrDivExpr();
         }
     }
 
     private void skipMulOrDivExpr() {
         skipSuffixUnaryExpr();
-        while (lexer.peekIgnoreLineBreak().type == Token.Type.MUL
-                || lexer.peekIgnoreLineBreak().type == Token.Type.DIV) {
-            lexer.nextIgnoreLineBreak();
+        while (lexer.peek().type == Token.Type.MUL
+                || lexer.peek().type == Token.Type.DIV) {
+            lexer.next();
             skipSuffixUnaryExpr();
         }
     }
 
     private void skipSuffixUnaryExpr() {
         skipPrefixUnaryExpr();
-        if (lexer.peekIgnoreLineBreak().type == Token.Type.INC
-                || lexer.peekIgnoreLineBreak().type == Token.Type.DEC) {
-            lexer.nextIgnoreLineBreak();
+        if (lexer.peek().type == Token.Type.INC
+                || lexer.peek().type == Token.Type.DEC) {
+            lexer.next();
         }
     }
 

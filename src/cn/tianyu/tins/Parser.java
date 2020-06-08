@@ -111,7 +111,7 @@ public class Parser {
         List<VarDefNode> list = new ArrayList<>();
 
         // 数组定义
-        if (lexer.lookAheadIgnoreLineBreak(3).type == Token.Type.L_SQUARE_BRACKET) {
+        if (lexer.lookAheadIgnoreLineBreak(2).type == Token.Type.L_SQUARE_BRACKET) {
             // 一行只能定义一个数组
             list.add(arrDef());
             return list;
@@ -124,14 +124,16 @@ public class Parser {
             varDefNode.isArr = false;
             varDefNode.varName = lexer.match(Token.Type.IDENTIFIER).name;
             Token label = lexer.peekIgnoreLineBreak();
+            if (label.type == Token.Type.ASSIGN) {
+                lexer.next();
+                varDefNode.value = expr();
+                label = lexer.peek();
+            }
 
             if (isLineEnd(label.type)) {
                 lexer.nextIgnoreLineBreak();
                 list.add(varDefNode);
                 break;
-            } else if (label.type == Token.Type.ASSIGN) {
-                //TODO 解析赋值表达式
-                varDefNode.value = expr();
             } else if (label.type == Token.Type.COMMA) {
                 lexer.nextIgnoreLineBreak();
             } else {
@@ -496,7 +498,7 @@ public class Parser {
             }
             return new FactorExpr(expr, nextExprList);
         }
-        lexer.error(token,"expr cannot be null!");
+        lexer.error(token, "expr cannot be null!");
         return null;
     }
 

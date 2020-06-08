@@ -8,9 +8,9 @@ public class Main {
 
     public static void main(String[] args) {
         String testFile = "sample/test1.tins";
-        testLexer(testFile);
+        // testLexer(testFile);
         // testParser(testFile);
-        // testPreParser(testFile);
+        testPreParser(testFile);
     }
 
     public static void testLexer(String fileName) {

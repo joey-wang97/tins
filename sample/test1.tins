@@ -24,7 +24,7 @@ a
 }
 int 刘运星=1
 
-func 汪继友
+func void 汪继友
 (
 double
 魏浩浩
@@ -39,5 +39,5 @@ var test= =1;
 int a = 1, b = fun1(), c = a == func() ?
 c[i+9] * (int)(10.0)
 :
-b().c.d + a
--b
+b().c.d + a-
+b
