@@ -205,8 +205,16 @@ public class DefParser {
             ;
     }
 
-    //表达式，默认为赋值表达式
     private void skipExpr() {
+        Token token = lexer.peek();
+        while (token.type != Token.Type.COMMA
+                && token.type != Token.Type.LINE_BREAK) {
+
+        }
+    }
+
+    //表达式，默认为赋值表达式
+    /*private void skipExpr() {
         skipCondExpr();
         Token label = lexer.peek();
         if (label.type.ordinal() >= Token.Type.ASSIGN.ordinal()
@@ -214,7 +222,7 @@ public class DefParser {
             lexer.next();
             skipExpr();
         }
-    }
+    }*/
 
     private void skipCondExpr() {
         skipLogicOrExpr();

@@ -32,6 +32,12 @@ public class Main {
         // ast.dump();
     }
 
+    public static int get1() {
+        return a;
+    }
+
+    static int a = get1();
+
     public static void testPreParser(String fileName) {
         Lexer lexer = new Lexer(fileName);
         DefParser defParser = new DefParser(lexer);
@@ -39,5 +45,6 @@ public class Main {
         // 输出符号表
         SymbolTable.dumpSymbol();
     }
+
 
 }
