@@ -97,7 +97,7 @@ public class DefParser {
         funcDefNode.funcType = funcType;
         funcDefNode.funcName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
         funcDefNode.params = funParam();
-        skipFuncBody();
+        skipCompoundStmt();
         return funcDefNode;
     }
 
@@ -111,7 +111,7 @@ public class DefParser {
 
         // 数组定义
         if (lexer.lookAheadIgnoreLineBreak(2).type == Token.Type.L_SQUARE_BRACKET) {
-            // 一次只能定义一个数组
+            // 一行只能定义一个数组
             list.add(arrDef());
             return list;
         }
@@ -150,7 +150,12 @@ public class DefParser {
         varDef.isArr = true;
         varDef.varType = lexer.nextIgnoreLineBreak();
         varDef.varName = lexer.match(Token.Type.IDENTIFIER).name;
-        // lexer.match()
+        lexer.match(Token.Type.L_SQUARE_BRACKET);
+        while (lexer.next().type != Token.Type.R_SQUARE_BRACKET)
+            ;
+        if (lexer.peek().type == Token.Type.ASSIGN) {
+            skipCompoundStmt();
+        }
         return varDef;
     }
 
@@ -199,17 +204,47 @@ public class DefParser {
         return nodes;
     }
 
-    private void skipFuncBody() {
+    /**
+     * 跳过花括号内的所有语句
+     */
+    private void skipCompoundStmt() {
         lexer.matchIgnoreLineBreak(Token.Type.L_CURLY_BRACKET);
         while (lexer.next().type != Token.Type.R_CURLY_BRACKET)
             ;
     }
 
+    // 跳过一个表达式，单行表达式中可能用逗号分隔了多个表达式
     private void skipExpr() {
-        Token token = lexer.peek();
+        Token token = lexer.next();
         while (token.type != Token.Type.COMMA
                 && token.type != Token.Type.LINE_BREAK) {
 
+            // 如果遇到圆括号，则跳过其中的token
+            while (token.type == Token.Type.OPEN_PARENTHESIS) {
+                while (token.type != Token.Type.CLOSE_PARENTHESIS) {
+                    token = lexer.nextIgnoreLineBreak();
+                }
+            }
+            // 如果遇到方括号，则跳过其中的token
+            while (token.type == Token.Type.L_SQUARE_BRACKET) {
+                while (token.type != Token.Type.R_SQUARE_BRACKET) {
+                    token = lexer.nextIgnoreLineBreak();
+                }
+            }
+            // 如果遇到花括号，则跳过其中的token
+            while (token.type == Token.Type.L_CURLY_BRACKET) {
+                while (token.type != Token.Type.R_CURLY_BRACKET) {
+                    token = lexer.nextIgnoreLineBreak();
+                }
+            }
+            // 如果前面是换行符，且当前为强运算符，则读取下一个非换行符
+            // 如 a + \n 2，当前token为+，应让token跳到2的位置
+            for (int i = 0; lexer.lookAhead(1).type == Token.Type.LINE_BREAK
+                    && i < Token.STRONG_OPERATOR.length; i++) {
+                if (token.type == Token.STRONG_OPERATOR[i]) {
+                    lexer.nextIgnoreLineBreak();
+                }
+            }
         }
     }
 
@@ -332,7 +367,7 @@ public class DefParser {
     private void skipPrefixUnaryExpr() {
         Token.Type labelType = lexer.peekIgnoreLineBreak().type;
         // 取反，取非，都是可递归的
-        if (labelType == Token.Type.TILDE || labelType == Token.Type.NOT) {
+        if (labelType == Token.Type.BIT_REVERSE || labelType == Token.Type.NOT) {
             lexer.nextIgnoreLineBreak();
             skipPrefixUnaryExpr();
         } else if (labelType == Token.Type.INC // 这些操作符不可递归

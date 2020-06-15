@@ -50,6 +50,13 @@ public class Lexer {
     }
 
     /**
+     * 向前看n个token
+     */
+    public Token lookAhead(int n) {
+        return readTokens.get(tokenPosition + n);
+    }
+
+    /**
      * 向前看n个非换行符token
      */
     public Token lookAheadIgnoreLineBreak(int n) {
