@@ -219,173 +219,67 @@ public class DefParser {
         while (token.type != Token.Type.COMMA
                 && token.type != Token.Type.LINE_BREAK) {
 
-            // 如果遇到圆括号，则跳过其中的token
-            while (token.type == Token.Type.OPEN_PARENTHESIS) {
-                while (token.type != Token.Type.CLOSE_PARENTHESIS) {
+            // 三目运算符，三目运算符分量中也可以包含各种括号，头疼..
+            if (token.type == Token.Type.QUESTION_MARK) {
+                // 匹配到冒号
+                while (token.type != Token.Type.COLON) {
                     token = lexer.nextIgnoreLineBreak();
                 }
+            }
+            // 如果遇到圆括号，则跳过其中的token
+            while (token.type == Token.Type.OPEN_PARENTHESIS) {
+                // 左括号数量
+                int count = 1;
+                while (count > 0) {
+                    token = lexer.nextIgnoreLineBreak();
+                    if (token.type == Token.Type.OPEN_PARENTHESIS)
+                        count++;
+                    else if (token.type == Token.Type.CLOSE_PARENTHESIS)
+                        count--;
+                }
+                token = lexer.nextIgnoreLineBreak();
             }
             // 如果遇到方括号，则跳过其中的token
             while (token.type == Token.Type.L_SQUARE_BRACKET) {
-                while (token.type != Token.Type.R_SQUARE_BRACKET) {
+                // 左括号数量
+                int count = 1;
+                while (count > 0) {
                     token = lexer.nextIgnoreLineBreak();
+                    if (token.type == Token.Type.L_SQUARE_BRACKET)
+                        count++;
+                    else if (token.type == Token.Type.R_SQUARE_BRACKET)
+                        count--;
                 }
+                token = lexer.nextIgnoreLineBreak();
             }
             // 如果遇到花括号，则跳过其中的token
             while (token.type == Token.Type.L_CURLY_BRACKET) {
-                while (token.type != Token.Type.R_CURLY_BRACKET) {
+                // 左括号数量
+                int count = 1;
+                while (count > 0) {
                     token = lexer.nextIgnoreLineBreak();
+                    if (token.type == Token.Type.L_CURLY_BRACKET)
+                        count++;
+                    else if (token.type == Token.Type.R_CURLY_BRACKET)
+                        count--;
                 }
+                token = lexer.nextIgnoreLineBreak();
             }
-            // 如果前面是换行符，且当前为强运算符，则读取下一个非换行符
+            // 如果下一个token是换行符，且当前token为强运算符，则读取下一个非换行符
             // 如 a + \n 2，当前token为+，应让token跳到2的位置
-            for (int i = 0; lexer.lookAhead(1).type == Token.Type.LINE_BREAK
+            boolean ignoreLineBreak = false;
+            for (int i = 0; lexer.peek().type == Token.Type.LINE_BREAK
                     && i < Token.STRONG_OPERATOR.length; i++) {
                 if (token.type == Token.STRONG_OPERATOR[i]) {
-                    lexer.nextIgnoreLineBreak();
+                    ignoreLineBreak = true;
+                    break;
                 }
             }
-        }
-    }
-
-    //表达式，默认为赋值表达式
-    /*private void skipExpr() {
-        skipCondExpr();
-        Token label = lexer.peek();
-        if (label.type.ordinal() >= Token.Type.ASSIGN.ordinal()
-                && label.type.ordinal() <= Token.Type.RSH_ASSIGN.ordinal()) {
-            lexer.next();
-            skipExpr();
-        }
-    }*/
-
-    private void skipCondExpr() {
-        skipLogicOrExpr();
-        Token label = lexer.peek();
-        if (label.type == Token.Type.QUESTION_MARK) {
-            lexer.next();
-            skipExpr();
-            lexer.matchIgnoreLineBreak(Token.Type.COLON);
-            skipCondExpr();
-        }
-    }
-
-    // 这里使用递归代替while循环
-    private void skipLogicOrExpr() {
-        skipLogicAndExpr();
-        if (lexer.peek().type == Token.Type.OR) {
-            lexer.next();
-            skipLogicOrExpr();
-        }
-    }
-
-    private void skipLogicAndExpr() {
-        skipBitOrExpr();
-        while (lexer.peek().type == Token.Type.AND) {
-            lexer.next();
-            skipBitOrExpr();
-        }
-    }
-
-    private void skipBitOrExpr() {
-        skipBitXorExpr();
-        while (lexer.peek().type == Token.Type.B_OR) {
-            lexer.next();
-            skipBitXorExpr();
-        }
-    }
-
-    private void skipBitXorExpr() {
-        skipBitAndExpr();
-        while (lexer.peek().type == Token.Type.B_XOR) {
-            lexer.next();
-            skipBitAndExpr();
-        }
-    }
-
-    private void skipBitAndExpr() {
-        skipEqualityExpr();
-        while (lexer.peek().type == Token.Type.B_AND) {
-            lexer.next();
-            skipEqualityExpr();
-        }
-    }
-
-    private void skipEqualityExpr() {
-        skipRelationExpr();
-        while (lexer.peek().type == Token.Type.EQ
-                || lexer.peek().type == Token.Type.NE) {
-            lexer.nextIgnoreLineBreak();
-            skipRelationExpr();
-        }
-    }
-
-    private void skipRelationExpr() {
-        skipShiftExpr();
-        while (lexer.peek().type.ordinal() >= Token.Type.GT.ordinal()
-                && lexer.peek().type.ordinal() <= Token.Type.LT.ordinal()) {
-            lexer.next();
-            skipShiftExpr();
-        }
-    }
-
-    private void skipShiftExpr() {
-        skipAddOrSubExpr();
-        while (lexer.peek().type == Token.Type.LSH
-                || lexer.peek().type == Token.Type.RSH) {
-            lexer.next();
-            skipAddOrSubExpr();
-        }
-    }
-
-    private void skipAddOrSubExpr() {
-        skipMulOrDivExpr();
-        while (lexer.peek().type == Token.Type.ADD
-                || lexer.peek().type == Token.Type.SUB) {
-            lexer.next();
-            skipMulOrDivExpr();
-        }
-    }
-
-    private void skipMulOrDivExpr() {
-        skipSuffixUnaryExpr();
-        while (lexer.peek().type == Token.Type.MUL
-                || lexer.peek().type == Token.Type.DIV) {
-            lexer.next();
-            skipSuffixUnaryExpr();
-        }
-    }
-
-    private void skipSuffixUnaryExpr() {
-        skipPrefixUnaryExpr();
-        if (lexer.peek().type == Token.Type.INC
-                || lexer.peek().type == Token.Type.DEC) {
-            lexer.next();
-        }
-    }
-
-    private void skipPrefixUnaryExpr() {
-        Token.Type labelType = lexer.peekIgnoreLineBreak().type;
-        // 取反，取非，都是可递归的
-        if (labelType == Token.Type.BIT_REVERSE || labelType == Token.Type.NOT) {
-            lexer.nextIgnoreLineBreak();
-            skipPrefixUnaryExpr();
-        } else if (labelType == Token.Type.INC // 这些操作符不可递归
-                || labelType == Token.Type.DEC
-                || labelType == Token.Type.SUB) {
-            lexer.nextIgnoreLineBreak();
-            skipFactorExpr();
-        }
-        skipFactorExpr();
-    }
-
-    private void skipFactorExpr() {
-        Token token = lexer.nextIgnoreLineBreak();
-        if (token.type == Token.Type.NUMBER_VAL
-                || token.type == Token.Type.STRING_VAL
-                || token.type == Token.Type.DOUBLE_VAL
-                || token.type == Token.Type.FLOAT_VAL
-                || token.type == Token.Type.CHAR_VAL) {
+            // 此处不能直接next，因为next可能会读取逗号
+            token = ignoreLineBreak ? lexer.peekIgnoreLineBreak() : lexer.peek();
+            // 如果下一个不是逗号，则next掉
+            if (token.type != Token.Type.COMMA)
+                lexer.next();
         }
     }
 }

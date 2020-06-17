@@ -36,8 +36,9 @@ float
 var test= =1;
 }
 
-int a = 1, b = fun1(), c = a == func() ?
+# 预解析变量, a, b, d, d
+int a = 1, b = fun1(), c = a == func2() ?
 c[i+9] * (int)(10.0)
 :
-b().c.d + a-
-b
+b().c.d ? a-
+1 : a+b, d

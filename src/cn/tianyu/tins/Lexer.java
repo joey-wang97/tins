@@ -53,7 +53,7 @@ public class Lexer {
      * 向前看n个token
      */
     public Token lookAhead(int n) {
-        return readTokens.get(tokenPosition + n);
+        return readTokens.get(tokenPosition + n - 1);
     }
 
     /**

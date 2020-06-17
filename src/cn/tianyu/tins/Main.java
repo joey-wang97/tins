@@ -15,15 +15,11 @@ public class Main {
 
     public static void testLexer(String fileName) {
         Lexer lexer = new Lexer(fileName);
+        System.out.println(lexer.peek().type.name());
+        System.out.println(lexer.lookAhead(1).type.name());
         Token token = lexer.next();
-        while (token.type != Token.Type.END) {
-            System.out.println(token.line + "," + token.col + " " + token.type.name());
-            token = lexer.next();
-        }
-        // System.out.println(lexer.peekIgnoreLineBreak().type.name());
-        // System.out.println(lexer.matchIgnoreLineBreak(Token.Type.STRUCT).type.name());
-        // System.out.println(lexer.nextIgnoreLineBreak().type.name());
-        // System.out.println(lexer.peekIgnoreLineBreak().type.name());
+        System.out.println(lexer.peek().type.name());
+        System.out.println(lexer.lookAhead(1).type.name());
     }
 
     public static void testParser(String fileName) {

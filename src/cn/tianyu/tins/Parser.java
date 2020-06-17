@@ -445,7 +445,7 @@ public class Parser {
     private ExprNode prefixUnaryExpr() {
         Token.Type labelType = lexer.peekIgnoreLineBreak().type;
         // 取反，取非，都是可递归的
-        if (labelType == Token.Type.TILDE || labelType == Token.Type.NOT) {
+        if (labelType == Token.Type.BIT_REVERSE || labelType == Token.Type.NOT) {
             return new PrefixUnaryExpr(lexer.nextIgnoreLineBreak().type, prefixUnaryExpr());
         } else if (labelType == Token.Type.INC // 这些操作符不可递归
                 || labelType == Token.Type.DEC
