@@ -6,6 +6,7 @@ import cn.tianyu.tins.ast.stmt.*;
 import cn.tianyu.tins.symbol.StructSymbol;
 import cn.tianyu.tins.symbol.SymbolTable;
 import cn.tianyu.tins.type.Token;
+import sun.awt.Symbol;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -21,12 +22,13 @@ public class Parser {
 
     public TopDefNode parser() {
 
-        DefParser defParser = new DefParser(lexer);
-        defParser.preParser();
+        scanStruct();
+        lexer.restart();
         // 输出符号表
         SymbolTable.dumpSymbol();
+        return null;
 
-        TopDefNode top = new TopDefNode();
+        /*TopDefNode top = new TopDefNode();
 
         // 先加载所有import语句
         if (lexer.peekIgnoreLineBreak().type == Token.Type.IMPORT) {
@@ -42,7 +44,25 @@ public class Parser {
                 top.varDefNodes.addAll(varDefs());
             }
         }
-        return top;
+        return top;*/
+    }
+
+    /**
+     * 扫描所有struct名称，放入符号表
+     */
+    public void scanStruct() {
+        Token token = lexer.nextIgnoreLineBreak();
+        while (token.type != Token.Type.END) {
+            // 读取到struct
+            while (token.type != Token.Type.STRUCT && token.type != Token.Type.END) {
+                token = lexer.nextIgnoreLineBreak();
+            }
+            if (token.type == Token.Type.END)
+                break;
+            String structName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
+            SymbolTable.addStruct(structName);
+            token = lexer.peekIgnoreLineBreak();
+        }
     }
 
     private boolean isLineEnd(Token.Type type) {

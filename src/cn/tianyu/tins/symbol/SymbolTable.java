@@ -17,4 +17,19 @@ public class SymbolTable {
         structSymbols.forEach(System.out::println);
         funcSymbols.forEach(System.out::println);
     }
+
+    public static void addStruct(String name) {
+        structSymbols.forEach(i->{
+            if (i.name.equals(name))
+                error("duplicate struct name!");
+        });
+        StructSymbol symbol = new StructSymbol();
+        symbol.name = name;
+        structSymbols.add(symbol);
+    }
+
+    public static void error(String msg) {
+        System.err.println(msg);
+        System.exit(-1);
+    }
 }

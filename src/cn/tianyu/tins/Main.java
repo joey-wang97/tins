@@ -6,11 +6,13 @@ import cn.tianyu.tins.type.Token;
 
 public class Main {
 
+    static Main main = new Main();
+
     public static void main(String[] args) {
         String testFile = "sample/test1.tins";
         // testLexer(testFile);
-        // testParser(testFile);
-        testPreParser(testFile);
+        testParser(testFile);
+        // testPreParser(testFile);
     }
 
     public static void testLexer(String fileName) {

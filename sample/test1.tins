@@ -22,6 +22,9 @@ a
 
     }
 }
+struct b{}
+
+struct c{}
 int 刘运星=1
 
 func void 汪继友

@@ -141,7 +141,6 @@ public class DefParser {
         }
         return list;
     }
-
     /**
      * 一次只能定义一个数组
      */
@@ -212,6 +211,7 @@ public class DefParser {
         while (lexer.next().type != Token.Type.R_CURLY_BRACKET)
             ;
     }
+
 
     // 跳过一个表达式，单行表达式中可能用逗号分隔了多个表达式
     private void skipExpr() {

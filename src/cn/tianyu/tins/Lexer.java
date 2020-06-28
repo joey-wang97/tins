@@ -35,6 +35,13 @@ public class Lexer {
         readTokens.add(token);
     }
 
+    /**
+     * 重新读取所有token
+     */
+    public void restart() {
+        tokenPosition = 0;
+    }
+
     public Token peek() {
         return readTokens.get(tokenPosition);
     }
