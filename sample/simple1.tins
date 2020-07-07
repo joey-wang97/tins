@@ -1,0 +1,40 @@
+import a b
+
+struct empty{ }
+
+struct Compose { string name }
+
+struct Circle {
+    double center
+    double radius
+    Struct Compose
+}
+
+func void area(Circle c) {
+    return c.center * c.radius;s
+}
+
+int a
+int b
+int c, d
+
+func main() {
+    int a = 1
+
+    string[] x = {"1", "2", "3"}
+    Circle circle1 = {1.0, 2.0}
+    Circle circle2 = {
+        center: 1.0,
+        radius: 2.0
+    }
+
+    Circle[] arr = {circle1, circle2}
+
+    float[3] arr2
+
+    print(getOne())
+}
+
+func int getOne() {
+    return 1
+}

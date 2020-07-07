@@ -4,7 +4,7 @@ a
     func void a() {}
 
     func
-    v
+    int
     a
     (
     int
@@ -36,7 +36,7 @@ float
 罗云冲
 )
 {
-var test= =1;
+int test= =1
 }
 
 # 预解析变量, a, b, d, d

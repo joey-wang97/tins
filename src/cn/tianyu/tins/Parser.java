@@ -6,7 +6,6 @@ import cn.tianyu.tins.ast.stmt.*;
 import cn.tianyu.tins.symbol.StructSymbol;
 import cn.tianyu.tins.symbol.SymbolTable;
 import cn.tianyu.tins.type.Token;
-import sun.awt.Symbol;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -21,14 +20,11 @@ public class Parser {
     }
 
     public TopDefNode parser() {
-
+        // 扫描所有struct，用于判断是否类型转换表达式
         scanStruct();
         lexer.restart();
-        // 输出符号表
-        SymbolTable.dumpSymbol();
-        return null;
 
-        /*TopDefNode top = new TopDefNode();
+        TopDefNode top = new TopDefNode();
 
         // 先加载所有import语句
         if (lexer.peekIgnoreLineBreak().type == Token.Type.IMPORT) {
@@ -44,7 +40,7 @@ public class Parser {
                 top.varDefNodes.addAll(varDefs());
             }
         }
-        return top;*/
+        return top;
     }
 
     /**
@@ -115,7 +111,7 @@ public class Parser {
         lexer.matchIgnoreLineBreak(Token.Type.FUNC);
         Token funcType = lexer.nextIgnoreLineBreak();
         // 检查函数类型是否合法
-        if (!isVarType(funcType.type) && funcType.type != Token.Type.VOID)
+        if (!isVarType(funcType) && funcType.type != Token.Type.VOID)
             lexer.error(funcType, "func type can't be " + funcType.name);
         funcDefNode.funcType = funcType;
         funcDefNode.funcName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
@@ -177,9 +173,17 @@ public class Parser {
     /**
      * 判断token type是否变量类型
      */
-    private boolean isVarType(Token.Type type) {
-        return type == Token.Type.IDENTIFIER
-                || (type.ordinal() >= Token.Type.INT.ordinal() && type.ordinal() <= Token.Type.DOUBLE.ordinal());
+    private boolean isVarType(Token token) {
+        if (token.type.ordinal() >= Token.Type.INT.ordinal() && token.type.ordinal() <= Token.Type.DOUBLE.ordinal())
+            return true;
+        if (token.type == Token.Type.IDENTIFIER) {
+            // 检查符号表中有没有该变量
+            for (StructSymbol structSymbol : SymbolTable.structSymbols) {
+                if (structSymbol.name.equals(token.name))
+                    return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -197,7 +201,7 @@ public class Parser {
         while (true) {
             FuncParamNode funcParamNode = new FuncParamNode();
             funcParamNode.paramType = lexer.nextIgnoreLineBreak();
-            if (!isVarType(funcParamNode.paramType.type)) {
+            if (!isVarType(funcParamNode.paramType)) {
                 lexer.error(funcParamNode.paramType, "func param type can't be " + funcParamNode.paramType.type.name());
             }
             funcParamNode.paramName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
@@ -232,24 +236,27 @@ public class Parser {
     }
 
     private StmtNode stmt() {
-        switch (lexer.peekIgnoreLineBreak().type) {
-            case IF:
-                return ifStmt();
-            case WHILE:
-                return whileStmt();
-            case FOR:
-                return forStmtNode();
-            case SWITCH:
-                return switchStmtNode();
-            case BREAK:
-                return new BreakStmtNode();
-            case CONTINUE:
-                return new ContinueStmtNode();
-            case RETURN:
-                return new ReturnStmtNode(expr());
+        Token token = lexer.peekIgnoreLineBreak();
+        Token.Type type = token.type;
+        if (type == Token.Type.IF) {
+            return ifStmt();
+        } else if (type == Token.Type.WHILE) {
+            return whileStmt();
+        } else if (type == Token.Type.FOR) {
+            return forStmtNode();
+        } else if (type == Token.Type.SWITCH) {
+            return switchStmtNode();
+        } else if (type == Token.Type.BREAK) {
+            return new BreakStmtNode();
+        } else if (type == Token.Type.CONTINUE) {
+            return new ContinueStmtNode();
+        } else if (type == Token.Type.RETURN) {
+            return new ReturnStmtNode(expr());
         }
-        lexer.unexpectedToken(lexer.peekIgnoreLineBreak());
-        return null;
+        if (isVarType(token)) {
+            return new VarDefStmtNode(varDefs());
+        }
+        return new ExprStmtNode(expr());
     }
 
     private IfStmtNode ifStmt() {
@@ -473,7 +480,7 @@ public class Parser {
             return new PrefixUnaryExpr(lexer.nextIgnoreLineBreak().type, factorExpr());
         } else if (labelType == Token.Type.OPEN_PARENTHESIS) {
             Token token = lexer.lookAheadIgnoreLineBreak(1);
-            if (isVarType(token.type) || isCastType(token)) {
+            if (isVarType(token) || isCastType(token)) {
                 return new CastExpr(token, prefixUnaryExpr());
             }
         }

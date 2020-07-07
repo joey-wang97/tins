@@ -3,7 +3,7 @@ package cn.tianyu.tins.ast;
 import cn.tianyu.tins.type.Token;
 
 /**
- * 顶层结点
+ * 变量定义
  */
 public class VarDefNode extends Node {
 

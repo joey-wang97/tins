@@ -27,7 +27,7 @@ public class Main {
     public static void testParser(String fileName) {
         Parser parser = new Parser(fileName);
         TopDefNode ast = parser.parser();
-        // ast.dump();
+        ast.dump();
     }
 
     public static int get1() {
