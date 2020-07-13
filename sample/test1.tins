@@ -36,12 +36,11 @@ float
 罗云冲
 )
 {
-int test= =1
+int test=1
 }
 
 # 预解析变量, a, b, d, d
 int a = 1, b = fun1(), c = a == func2() ?
-c[i+9] * (int)(10.0)
-:
+c[i+9] * (int)(10.0):
 b().c.d ? a-
 1 : a+b, d

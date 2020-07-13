@@ -11,3 +11,8 @@ simple and powerful, without gc, vm... so it's fast.
 ### 1、Parser
 - 数组赋值表达式
 - 结构体赋值表达式
+
+格式化输出，查看为什么b().c.d，只显示了b
+以及c[i+9]，只显示了c
+
+强制转换时，输出了太多层括号.

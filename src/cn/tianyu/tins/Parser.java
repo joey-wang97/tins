@@ -40,6 +40,7 @@ public class Parser {
                 top.varDefNodes.addAll(varDefs());
             }
         }
+
         return top;
     }
 
@@ -157,6 +158,7 @@ public class Parser {
                 list.add(varDefNode);
                 break;
             }
+            list.add(varDefNode);
         }
         return list;
     }
@@ -479,8 +481,14 @@ public class Parser {
                 || labelType == Token.Type.SUB) {
             return new PrefixUnaryExpr(lexer.nextIgnoreLineBreak().type, factorExpr());
         } else if (labelType == Token.Type.OPEN_PARENTHESIS) {
+            // 类型转换表达式
             Token token = lexer.lookAheadIgnoreLineBreak(1);
             if (isVarType(token) || isCastType(token)) {
+                // 吞掉左括号
+                lexer.next();
+                // 吞掉token，即转换类型
+                lexer.next();
+                lexer.matchIgnoreLineBreak(Token.Type.CLOSE_PARENTHESIS);
                 return new CastExpr(token, prefixUnaryExpr());
             }
         }
@@ -513,19 +521,20 @@ public class Parser {
             List<FactorExpr.NextExpr> nextExprList = new ArrayList<>();
             while (true) {
                 Token.Type labelType = lexer.peekIgnoreLineBreak().type;
-                if (labelType == Token.Type.COMMA) { // id.id.id.id
+                if (labelType == Token.Type.DOT) { // id.id.id.id
                     lexer.nextIgnoreLineBreak();
                     nextExprList.add(new FactorExpr.NextExpr(lexer.match(Token.Type.IDENTIFIER).name));
                 } else if (labelType == Token.Type.L_SQUARE_BRACKET) { // id[expr][expr][expr]
                     lexer.nextIgnoreLineBreak();
                     nextExprList.add(new FactorExpr.NextExpr(expr()));
+                    lexer.match(Token.Type.R_SQUARE_BRACKET);
                 } else {
                     break;
                 }
             }
             return new FactorExpr(expr, nextExprList);
         }
-        lexer.error(token, "expr cannot be null!");
+        lexer.error(token, "unexpected token " + token.type.name());
         return null;
     }
 

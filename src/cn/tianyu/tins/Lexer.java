@@ -23,6 +23,7 @@ public class Lexer {
      * 下一个要获取的token位置
      */
     int tokenPosition = 0;
+    public Token end = new Token(Token.Type.END);
 
     public Lexer(String fileName) {
         readFile(fileName);
@@ -42,25 +43,35 @@ public class Lexer {
         tokenPosition = 0;
     }
 
+    private Token get(int position) {
+        if (position >= readTokens.size())
+            return end;
+        return readTokens.get(position);
+    }
+
+    /**
+     * 即lookAHead(0)
+     */
     public Token peek() {
-        return readTokens.get(tokenPosition);
+        return get(tokenPosition);
     }
 
     /**
      * 忽略换行符，取一个token
      */
     public Token peekIgnoreLineBreak() {
-        while (readTokens.get(tokenPosition).type == Token.Type.LINE_BREAK) {
+        while (get(tokenPosition).type == Token.Type.LINE_BREAK) {
             tokenPosition++;
         }
-        return readTokens.get(tokenPosition);
+        return get(tokenPosition);
     }
 
     /**
      * 向前看n个token
+     * peek()为lookAHead(0)
      */
     public Token lookAhead(int n) {
-        return readTokens.get(tokenPosition + n - 1);
+        return readTokens.get(tokenPosition + n);
     }
 
     /**
@@ -146,8 +157,7 @@ public class Lexer {
 
         Token token = new Token();
         if (srcPosition >= src.length()) {
-            token.type = Token.Type.END;
-            return token;
+            return end;
         }
 
         int tabCount = 0;

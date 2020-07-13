@@ -9,6 +9,12 @@ public class Token {
     public Object value;
     public int line, col;
 
+    public Token(){}
+
+    public Token(Type type) {
+        this.type = type;
+    }
+
     public enum Type {
         IDENTIFIER,
         NUMBER_VAL,

@@ -12,4 +12,9 @@ public class AddOrSubExpr extends ExprNode {
         this.operator = operator;
         this.rightExpr = rightExpr;
     }
+
+    @Override
+    public void dump(int indent) {
+        dump(indent, "add or sub expr");
+    }
 }

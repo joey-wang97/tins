@@ -3,6 +3,11 @@ package cn.tianyu.tins;
 import cn.tianyu.tins.ast.TopDefNode;
 import cn.tianyu.tins.symbol.SymbolTable;
 import cn.tianyu.tins.type.Token;
+import com.alibaba.fastjson.JSON;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Main {
 
@@ -27,7 +32,8 @@ public class Main {
     public static void testParser(String fileName) {
         Parser parser = new Parser(fileName);
         TopDefNode ast = parser.parser();
-        ast.dump();
+        writeToFile("test.json", JSON.toJSONString(ast));
+        // ast.dump();
     }
 
     public static int get1() {
@@ -44,5 +50,14 @@ public class Main {
         SymbolTable.dumpSymbol();
     }
 
-
+    public static void writeToFile(String filePath, String content) {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
+            writer.write(content);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -8,6 +8,6 @@ public class ExprNode extends Node{
     @Override
     public void dump(int indent) {
         super.printIndent(indent);
-        System.out.println();
+        System.out.println("it's just expr node");
     }
 }

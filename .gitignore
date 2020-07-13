@@ -5,6 +5,7 @@
 *.iml
 out
 gen
+test.json
 
 # kotlin lib
 lib/
