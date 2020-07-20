@@ -1,4 +1,4 @@
-import a b
+import a.b
 
 struct empty{ }
 
@@ -11,26 +11,29 @@ struct Circle {
 }
 
 func void area(Circle c) {
-    return c.center * c.radius;s
+    return c.center * c.radius
+    s
 }
 
 int a
 int b
 int c, d
 
-func main() {
+func void main() {
     int a = 1
 
-    string[] x = {"1", "2", "3"}
-    Circle circle1 = {1.0, 2.0}
+    string[] x = ["1", "2", "3"]
+    string x[] = ["1", "2", "3"]
+    Circle circle1 = [1.0, 2.0]
     Circle circle2 = {
         center: 1.0,
         radius: 2.0
     }
 
-    Circle[] arr = {circle1, circle2}
+    Circle[] arr = [circle1, circle2]
 
-    float[3] arr2
+    int[2] arr1 = [1, 2]
+    float[3][1] arr2 = [[1], [2], [3]]
 
     print(getOne())
 }

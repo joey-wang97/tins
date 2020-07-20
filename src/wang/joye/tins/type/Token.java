@@ -42,7 +42,6 @@ public class Token {
         DEFAULT,
         BREAK,
         CONTINUE,
-        MAIN,
         IMPORT,
         THIS,
         // 基本运算

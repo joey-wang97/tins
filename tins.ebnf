@@ -104,6 +104,11 @@ factorExpr = factorExpr '.' ID
            | primary
            | '(' expr ')'
 
+(* 不可分割，不可链式操作 *)
 primaryExpr = NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL
+            | arrExpr | structExpr
 
 callFuncExpr = ID '(' param ')'
+
+arrExpr = '[' (expr ',')* ',' ']'
+objectExpr = '{' (expr ',')* ',' '}'

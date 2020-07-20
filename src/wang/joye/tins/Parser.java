@@ -113,6 +113,9 @@ public class Parser {
             lexer.error(funcType, "func type can't be " + funcType.name);
         funcDefNode.funcType = funcType;
         funcDefNode.funcName = lexer.matchIgnoreLineBreak(Token.Type.IDENTIFIER).name;
+        if (funcDefNode.funcName.equals("main")) {
+            // TODO main func
+        }
         funcDefNode.paramNode = funParam();
         funcDefNode.stmts = funcBody();
         return funcDefNode;
@@ -125,7 +128,7 @@ public class Parser {
         List<VarDefNode> list = new ArrayList<>();
 
         // 数组定义
-        if (lexer.lookAheadIgnoreLineBreak(2).type == Token.Type.L_SQUARE_BRACKET) {
+        if (lexer.lookAheadIgnoreLineBreak(1).type == Token.Type.L_SQUARE_BRACKET) {
             // 一行只能定义一个数组
             list.add(arrDef());
             return list;
@@ -135,7 +138,6 @@ public class Parser {
         while (true) {
             VarDefNode varDefNode = new VarDefNode();
             varDefNode.varType = varType;
-            varDefNode.isArr = false;
             varDefNode.varName = lexer.match(Token.Type.IDENTIFIER).name;
             Token label = lexer.peekIgnoreLineBreak();
             if (label.type == Token.Type.ASSIGN) {
@@ -161,12 +163,24 @@ public class Parser {
     }
 
     private VarDefNode arrDef() {
-        VarDefNode varDef = new VarDefNode();
-        varDef.isArr = true;
-        varDef.varType = lexer.nextIgnoreLineBreak();
-        varDef.varName = lexer.match(Token.Type.IDENTIFIER).name;
-        // lexer.match()
-        return varDef;
+        VarDefNode arrDef = new VarDefNode();
+        arrDef.varType = lexer.nextIgnoreLineBreak();
+        while (lexer.peek().type == Token.Type.L_SQUARE_BRACKET) {
+            lexer.next();
+            // 数组维数可能为空
+            if (lexer.peekIgnoreLineBreak().type == Token.Type.R_SQUARE_BRACKET) {
+                arrDef.addDimensionLength(null);
+            } else {
+                arrDef.addDimensionLength(expr());
+            }
+            lexer.match(Token.Type.R_SQUARE_BRACKET);
+        }
+        arrDef.varName = lexer.match(Token.Type.IDENTIFIER).name;
+        if (lexer.peekIgnoreLineBreak().type == Token.Type.ASSIGN) {
+            lexer.next();
+            arrDef.value = expr();
+        }
+        return arrDef;
     }
 
     /**
@@ -207,7 +221,6 @@ public class Parser {
             Token label = lexer.nextIgnoreLineBreak();
             // 判断数组
             if (label.type == Token.Type.L_SQUARE_BRACKET) {
-                funcParamNode.isArr = true;
                 lexer.matchIgnoreLineBreak(Token.Type.R_SQUARE_BRACKET);
                 label = lexer.nextIgnoreLineBreak();
             }
@@ -246,10 +259,13 @@ public class Parser {
         } else if (type == Token.Type.SWITCH) {
             return switchStmtNode();
         } else if (type == Token.Type.BREAK) {
+            lexer.next();
             return new BreakStmtNode();
         } else if (type == Token.Type.CONTINUE) {
+            lexer.next();
             return new ContinueStmtNode();
         } else if (type == Token.Type.RETURN) {
+            lexer.next();
             return new ReturnStmtNode(expr());
         }
         if (isVarType(token)) {
@@ -500,7 +516,11 @@ public class Parser {
                 || token.type == Token.Type.DOUBLE_VAL
                 || token.type == Token.Type.FLOAT_VAL
                 || token.type == Token.Type.CHAR_VAL) {
-            expr = new PrimaryExpr(token);
+            return new PrimaryExpr(token);
+        } else if (token.type == Token.Type.L_CURLY_BRACKET) {
+            return objectExpr();
+        } else if (token.type == Token.Type.L_SQUARE_BRACKET) {
+            return arrExpr();
         } else if (token.type == Token.Type.IDENTIFIER) {
             // 函数调用不可换行
             if (lexer.peek().type == Token.Type.OPEN_PARENTHESIS) {
@@ -555,6 +575,29 @@ public class Parser {
             }
         }
         return new CallFuncExprNode(funcName, params);
+    }
+
+    public ArrExpr arrExpr() {
+        // TODO arrExpr和 objectExpr解析错误
+        // 末尾不包含逗号，并且可能为空[]
+        // callFuncExpr
+        ArrExpr arrExpr = new ArrExpr();
+        while (lexer.peekIgnoreLineBreak().type != Token.Type.R_CURLY_BRACKET) {
+            arrExpr.addValue(expr());
+            lexer.match(Token.Type.COMMA);
+        }
+        lexer.match(Token.Type.R_SQUARE_BRACKET);
+        return arrExpr;
+    }
+
+    public ObjectExpr objectExpr() {
+        ObjectExpr objectExpr = new ObjectExpr();
+        while (lexer.peekIgnoreLineBreak().type != Token.Type.R_CURLY_BRACKET) {
+            objectExpr.addValue(expr());
+            lexer.match(Token.Type.COMMA);
+        }
+        lexer.match(Token.Type.R_CURLY_BRACKET);
+        return objectExpr;
     }
 
     /**
