@@ -111,4 +111,4 @@ primaryExpr = NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL
 callFuncExpr = ID '(' param ')'
 
 arrExpr = '[' (expr ',')* ',' ']'
-objectExpr = '{' (expr ',')* ',' '}'
+structExpr = '{' (ID ':' expr ',')* ',' '}'

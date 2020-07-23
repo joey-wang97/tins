@@ -1,5 +1,6 @@
 package wang.joye.tins.ast.node;
 
+import wang.joye.tins.ast.stmt.CompoundStmtNode;
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.DumpUtil;
 
@@ -14,7 +15,7 @@ public class FuncDefNode extends Node {
     public Token funcType;
     public String funcName;
     public List<FuncParamNode> paramNode;
-    public List<StmtNode> stmts;
+    public CompoundStmtNode bodyStmt;
 
     public void dump(int level) {
         String funcTypeName = funcType.name == null ? funcType.type.name() : funcType.name;
@@ -24,6 +25,6 @@ public class FuncDefNode extends Node {
         DumpUtil.dump(level, "func params:");
         paramNode.forEach(i -> i.dump(level + 1));
         DumpUtil.dump(level, "func stmts:");
-        stmts.forEach(i -> i.dump(level + 1));
+        bodyStmt.stmts.forEach(i -> i.dump(level + 1));
     }
 }

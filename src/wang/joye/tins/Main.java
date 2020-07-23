@@ -1,7 +1,6 @@
 package wang.joye.tins;
 
 import wang.joye.tins.ast.AST;
-import wang.joye.tins.symbol.SymbolTable;
 import wang.joye.tins.type.Token;
 
 import java.io.BufferedWriter;
@@ -21,11 +20,15 @@ public class Main {
 
     public static void testLexer(String fileName) {
         Lexer lexer = new Lexer(fileName);
-        System.out.println(lexer.peek().type.name());
-        System.out.println(lexer.lookAhead(1).type.name());
         Token token = lexer.next();
-        System.out.println(lexer.peek().type.name());
+        /*System.out.println(lexer.peek().type.name());
         System.out.println(lexer.lookAhead(1).type.name());
+        System.out.println(lexer.peek().type.name());
+        System.out.println(lexer.lookAhead(1).type.name());*/
+        while (token.type != Token.Type.END) {
+            System.out.println(token.toString());
+            token = lexer.next();
+        }
     }
 
     public static void testParser(String fileName) {
@@ -33,14 +36,6 @@ public class Main {
         AST ast = parser.parser();
         // writeToFile("test.json", JSON.toJSONString(ast));
         ast.dump();
-    }
-
-    public static void testPreParser(String fileName) {
-        Lexer lexer = new Lexer(fileName);
-        DefParser defParser = new DefParser(lexer);
-        defParser.preParser();
-        // 输出符号表
-        SymbolTable.dumpSymbol();
     }
 
     public static void writeToFile(String filePath, String content) {

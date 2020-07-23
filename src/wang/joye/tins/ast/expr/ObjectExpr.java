@@ -10,17 +10,18 @@ import java.util.List;
  * [1, 2.0, func1()]
  */
 public class ObjectExpr extends ExprNode {
-    public List<ExprNode> exprs;
+    public List<ObjectField> fields;
 
     public ObjectExpr() {
-        this.exprs = new LinkedList<>();
+        this.fields = new LinkedList<>();
     }
 
-    public ObjectExpr(List<ExprNode> exprs) {
-        this.exprs = exprs;
+    public void addValue(ObjectField field) {
+        this.fields.add(field);
     }
 
-    public void addValue(ExprNode exprNode) {
-        this.exprs.add(exprNode);
+    public static class ObjectField {
+        public String name;
+        public ExprNode expr;
     }
 }

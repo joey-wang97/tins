@@ -1,18 +1,9 @@
 ## introduction
-A developing compiler based Java named "tins", which can compiler itself.
+A developing compiler based Java named "tins"
 
-simple and powerful, without gc, vm... so it's fast.
+## todo list
 
-## todo
-已经将struct名字保存到符号表
-接下来直接生成语法树，生成语法树
-在解析语法树的阶段进行检查，如果符号表没有该条目，则报错
-生成语法树时遇到func1(), func1(int a)，只记录这是个函数调用节点，在解析阶段再匹配函数符号表
-### 1、Parser
-- 数组赋值表达式
-- 结构体赋值表达式
-
-格式化输出，查看为什么b().c.d，只显示了b
-以及c[i+9]，只显示了c
-
-强制转换时，输出了太多层括号.
+### 语义分析
+- 检查函数类型是否为正确类型，只能为关键字或struct名
+- 检查赋值表达式类型是否合法
+- 检查表达式操作，加法之外的二元运算符，不能操作string

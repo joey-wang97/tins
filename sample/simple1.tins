@@ -1,23 +1,22 @@
-import a.b
+import a.b;
 
 struct empty{ }
 
 struct Compose { string name }
 
 struct Circle {
-    double center
-    double radius
-    Struct Compose
+    double center, radius=1;
+    Compose pose;
 }
 
 func void area(Circle c) {
-    return c.center * c.radius
-    s
+    return c.center * c.radius;
+    s;
 }
 
-int a
-int b
-int c, d
+int a;
+int b;
+int c, d;
 
 func void main() {
     int a = 1

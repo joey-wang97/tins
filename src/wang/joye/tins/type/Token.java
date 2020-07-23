@@ -7,7 +7,7 @@ public class Token {
     public Type type;
     public String name;
     public Object value;
-    public int line, col;
+    public int line, srcPosition;
 
     public Token(){}
 
@@ -93,57 +93,17 @@ public class Token {
         // 单双引号
         SINGLE_QUOTATION,
         DOUBLE_QUOTATION,
-        LINE_BREAK,
         // 结束符
         END
     }
 
-    /**
-     * 强运算符
-     * 即可以忽略换行符的运算符
-     * 包括二元运算符和右结合运算符
-     */
-    public static Token.Type[] STRONG_OPERATOR = {
-            // 算术运算
-            Type.ADD,
-            Type.SUB,
-            Type.MUL,
-            Type.DIV,
-            Type.MOD,
-            // 逻辑运算
-            Type.GT,
-            Type.LT,
-            Type.GE,
-            Type.LE,
-            Type.EQ,
-            Type.NE,
-            Type.OR,
-            Type.AND,
-            Type.NOT,
-            // 位运算
-            Type.B_OR,
-            Type.B_AND,
-            Type.B_XOR,
-            // 左移右移
-            Type.LSH,
-            Type.RSH,
-            // 各种形式的赋值 = += -= *= /= %= &= |= ^= <<= >>=
-            Type.ASSIGN,
-            Type.ADD_ASSIGN,
-            Type.SUB_ASSIGN,
-            Type.MUL_ASSIGN,
-            Type.DIV_ASSIGN,
-            Type.MOD_ASSIGN,
-            Type.B_AND_ASSIGN,
-            Type.B_OR_ASSIGN,
-            Type.B_XOR_ASSIGN,
-            Type.LSH_ASSIGN,
-            Type.RSH_ASSIGN,
-            // 点
-            Type.DOT,
-            // 问号
-            Type.QUESTION_MARK,
-            // 按位取反
-            Type.BIT_REVERSE,
-    };
+    @Override
+    public String toString() {
+        return "Token{" +
+                "type=" + type +
+                ", name='" + name + '\'' +
+                ", line=" + line +
+                ", srcPosition=" + srcPosition +
+                '}';
+    }
 }
