@@ -1,8 +1,8 @@
 package wang.joye.tins.ast.stmt;
 
-import wang.joye.tins.ast.node.Node;
 import wang.joye.tins.ast.node.StmtNode;
 import wang.joye.tins.ast.node.VarDefNode;
+import wang.joye.tins.util.DumpUtil;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class VarDefStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        dump(level, "var defs:");
-        varDefNodes.forEach(i -> i.dump(level + Node.INDENT));
+        DumpUtil.dump(level, "var defs:");
+        varDefNodes.forEach(i -> i.dump(level + 1));
     }
 }

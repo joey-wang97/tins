@@ -16,7 +16,7 @@ public class StructDefNode extends Node {
     public void dump(int level) {
         DumpUtil.dump(level, "struct name: " + name);
         DumpUtil.dump(level, "struct fields:");
-        fields.forEach(i -> i.dump(level + INDENT));
+        fields.forEach(i -> i.dump(level + 1));
         System.out.println();
     }
 }

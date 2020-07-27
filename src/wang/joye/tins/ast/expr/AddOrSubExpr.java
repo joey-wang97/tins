@@ -2,6 +2,7 @@ package wang.joye.tins.ast.expr;
 
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.type.Token;
+import wang.joye.tins.util.DumpUtil;
 
 public class AddOrSubExpr extends ExprNode {
     public ExprNode leftExpr, rightExpr;
@@ -15,6 +16,6 @@ public class AddOrSubExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        dump(level, "add or sub expr");
+        DumpUtil.dump(level, "add or sub expr");
     }
 }

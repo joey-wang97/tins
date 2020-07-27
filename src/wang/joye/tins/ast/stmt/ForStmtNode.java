@@ -13,7 +13,6 @@ public class ForStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        super.printIndent(level);
-        System.out.println();
+        // TODO
     }
 }

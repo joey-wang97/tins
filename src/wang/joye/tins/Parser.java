@@ -166,7 +166,7 @@ public class Parser {
             lexer.next();
             // 数组维数可能为空
             if (lexer.peek().type == Token.Type.R_SQUARE_BRACKET) {
-                arrDef.addDimensionLength(null);
+                arrDef.addDimensionLength(new ExprNode());
             } else {
                 arrDef.addDimensionLength(expr());
             }
@@ -217,20 +217,23 @@ public class Parser {
             if (!isVarType(funcParamNode.paramType)) {
                 lexer.error(funcParamNode.paramType, "func param type can't be " + funcParamNode.paramType.type.name());
             }
-            funcParamNode.paramName = lexer.match(Token.Type.IDENTIFIER).name;
-            Token label = lexer.next();
             // 判断数组
-            if (label.type == Token.Type.L_SQUARE_BRACKET) {
+            int dimensionLength = 0;
+            while (lexer.peek().type == Token.Type.L_SQUARE_BRACKET) {
+                lexer.next();
                 lexer.match(Token.Type.R_SQUARE_BRACKET);
-                label = lexer.next();
+                dimensionLength++;
             }
 
+            funcParamNode.paramName = lexer.match(Token.Type.IDENTIFIER).name;
+            funcParamNode.dimensionLength = dimensionLength;
+
+            Token label = lexer.next();
+
+            nodes.add(funcParamNode);
             if (label.type == Token.Type.CLOSE_PARENTHESIS) {
-                nodes.add(funcParamNode);
                 break;
-            } else if (label.type == Token.Type.COMMA) {
-                nodes.add(funcParamNode);
-            } else {
+            } else if (label.type != Token.Type.COMMA) {
                 lexer.unexpectedToken(label);
             }
         }
@@ -250,20 +253,28 @@ public class Parser {
             return switchStmtNode();
         } else if (type == Token.Type.BREAK) {
             lexer.next();
+            lexer.match(Token.Type.SEMICOLON);
             return new BreakStmtNode();
         } else if (type == Token.Type.CONTINUE) {
             lexer.next();
+            lexer.match(Token.Type.SEMICOLON);
             return new ContinueStmtNode();
         } else if (type == Token.Type.RETURN) {
             lexer.next();
-            return new ReturnStmtNode(expr());
+            StmtNode res = new ReturnStmtNode(expr());
+            lexer.match(Token.Type.SEMICOLON);
+            return res;
         } else if (type == Token.Type.L_CURLY_BRACKET) {
-
+            return compoundStmt();
         }
         if (isVarType(token)) {
             return new VarDefStmtNode(varDefs());
         }
-        return new ExprStmtNode(expr());
+        // 如果不是任何关键字语句，也不是变量定义语句
+        // 只剩下表达式语句
+        StmtNode res = new ExprStmtNode(expr());
+        lexer.match(Token.Type.SEMICOLON);
+        return res;
     }
 
     private CompoundStmtNode compoundStmt() {
@@ -512,25 +523,27 @@ public class Parser {
 
     private ExprNode factorExpr() {
         ExprNode expr = null;
-        Token token = lexer.next();
+        Token token = lexer.peek();
         if (token.type == Token.Type.NUMBER_VAL
                 || token.type == Token.Type.STRING_VAL
                 || token.type == Token.Type.DOUBLE_VAL
                 || token.type == Token.Type.FLOAT_VAL
                 || token.type == Token.Type.CHAR_VAL) {
+            lexer.next();
             return new PrimaryExpr(token);
-        } else if (token.type == Token.Type.L_CURLY_BRACKET) {
+        } else if (token.type == Token.Type.L_CURLY_BRACKET) { // 结构体赋值
             return structExpr();
-        } else if (token.type == Token.Type.L_SQUARE_BRACKET) {
+        } else if (token.type == Token.Type.L_SQUARE_BRACKET) { // 数组赋值
             return arrExpr();
         } else if (token.type == Token.Type.IDENTIFIER) {
-            // 函数调用不可换行
-            if (lexer.peek().type == Token.Type.OPEN_PARENTHESIS) {
+            lexer.next();
+            if (lexer.peek().type == Token.Type.OPEN_PARENTHESIS) { // 函数调用
                 expr = callFuncExpr(token.name);
             } else {
-                expr = new IdentifierExpr(token.name);
+                expr = new IdentifierExpr(token.name); // 变量调用
             }
-        } else if (token.type == Token.Type.OPEN_PARENTHESIS) {
+        } else if (token.type == Token.Type.OPEN_PARENTHESIS) { //括号表达式
+            lexer.match(Token.Type.OPEN_PARENTHESIS);
             ExprNode innerExpr = expr();
             lexer.match(Token.Type.CLOSE_PARENTHESIS);
             expr = new ParenthesisExpr(innerExpr);
@@ -580,6 +593,7 @@ public class Parser {
     }
 
     public ArrExpr arrExpr() {
+        lexer.match(Token.Type.L_SQUARE_BRACKET);
         ArrExpr arrExpr = new ArrExpr();
         if (lexer.peek().type == Token.Type.R_SQUARE_BRACKET) {
             lexer.next();
@@ -597,11 +611,10 @@ public class Parser {
     }
 
     /**
-     * 结构体赋值
-     *
-     * @return
+     * 结构体赋值语句
      */
     public ObjectExpr structExpr() {
+        lexer.match(Token.Type.L_CURLY_BRACKET);
         ObjectExpr objectExpr = new ObjectExpr();
         if (lexer.peek().type == Token.Type.R_CURLY_BRACKET) {
             lexer.next();

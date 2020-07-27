@@ -2,6 +2,7 @@ package wang.joye.tins.ast.stmt;
 
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.ast.node.StmtNode;
+import wang.joye.tins.util.DumpUtil;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class SwitchStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        super.printIndent(level);
+        DumpUtil.dump(level);
         System.out.println();
     }
 }
