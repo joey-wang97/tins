@@ -9,8 +9,6 @@ import java.io.IOException;
 
 public class Main {
 
-    static Main main = new Main();
-
     public static void main(String[] args) {
         String testFile = "sample/simple1.tins";
         // testLexer(testFile);
@@ -48,4 +46,5 @@ public class Main {
             e.printStackTrace();
         }
     }
+
 }

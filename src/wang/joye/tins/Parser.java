@@ -3,7 +3,7 @@ package wang.joye.tins;
 import wang.joye.tins.ast.AST;
 import wang.joye.tins.ast.expr.*;
 import wang.joye.tins.ast.node.*;
-import wang.joye.tins.ast.stmt.*;
+import wang.joye.tins.ast.node.stmt.*;
 import wang.joye.tins.symbol.StructSymbol;
 import wang.joye.tins.symbol.SymbolTable;
 import wang.joye.tins.type.Token;
@@ -224,6 +224,12 @@ public class Parser {
                 lexer.match(Token.Type.R_SQUARE_BRACKET);
                 dimensionLength++;
             }
+            // 可变参数
+            if (lexer.peek().type == lexer.lookAhead(1).type
+                    && lexer.peek().type == lexer.lookAhead(2).type
+                    && lexer.peek().type == Token.Type.DOT) {
+                funcParamNode.variableArr = true;
+            }
 
             funcParamNode.paramName = lexer.match(Token.Type.IDENTIFIER).name;
             funcParamNode.dimensionLength = dimensionLength;
@@ -261,9 +267,15 @@ public class Parser {
             return new ContinueStmtNode();
         } else if (type == Token.Type.RETURN) {
             lexer.next();
-            StmtNode res = new ReturnStmtNode(expr());
+            ReturnStmtNode returnStmt = new ReturnStmtNode();
+            //return后不包含表达式
+            if (lexer.peek().type == Token.Type.SEMICOLON) {
+                lexer.next();
+                return returnStmt;
+            }
+            returnStmt.expr = expr();
             lexer.match(Token.Type.SEMICOLON);
-            return res;
+            return returnStmt;
         } else if (type == Token.Type.L_CURLY_BRACKET) {
             return compoundStmt();
         }
@@ -295,9 +307,20 @@ public class Parser {
         lexer.match(Token.Type.CLOSE_PARENTHESIS);
         ifStmtNode.ifStmt = stmt();
 
-        if (lexer.peek().type == Token.Type.ELSE) {
+        while (lexer.peek().type == Token.Type.ELSE) {
             lexer.match(Token.Type.ELSE);
-            ifStmtNode.elseStmt = stmt();
+            // else if语句
+            if (lexer.peek().type == Token.Type.IF) {
+                lexer.next();
+                IfStmtNode.ElseIfStmt elseIfStmt = new IfStmtNode.ElseIfStmt();
+                lexer.match(Token.Type.OPEN_PARENTHESIS);
+                elseIfStmt.condition = expr();
+                lexer.match(Token.Type.CLOSE_PARENTHESIS);
+                elseIfStmt.stmt = stmt();
+            } else { // 遇到else语句，则不再循环匹配else if
+                ifStmtNode.elseStmt = stmt();
+                break;
+            }
         }
         return ifStmtNode;
     }
@@ -316,9 +339,12 @@ public class Parser {
         ForStmtNode forStmt = new ForStmtNode();
         lexer.match(Token.Type.FOR);
         lexer.match(Token.Type.OPEN_PARENTHESIS);
-        forStmt.init = expr();
-        lexer.match(Token.Type.SEMICOLON);
-        forStmt.condition = expr();
+        // 初始化条件为语句
+        forStmt.init = stmt();
+        // 条件表达式可能为空
+        if (lexer.peek().type != Token.Type.SEMICOLON) {
+            forStmt.condition = expr();
+        }
         lexer.match(Token.Type.SEMICOLON);
         forStmt.operation = expr();
         lexer.match(Token.Type.CLOSE_PARENTHESIS);
@@ -386,16 +412,6 @@ public class Parser {
         }
         return left;
     }
-
-    // 这是正常写法
-    /*private ExprNode logicOrExpr() {
-        ExprNode left = logicAndExpr();
-        while (lexer.peek().type == Token.Type.OR) {
-            lexer.next();
-            left = new LogicOrExpr(left, logicAndExpr());
-        }
-        return left;
-    }*/
 
     //这是我的第一想法，用递归代替循环，应该没问题
     private ExprNode logicOrExpr() {
@@ -555,7 +571,7 @@ public class Parser {
                 Token.Type labelType = lexer.peek().type;
                 if (labelType == Token.Type.DOT) { // id.id.id.id
                     lexer.next();
-                    nextExprList.add(new FactorExpr.NextExpr(lexer.match(Token.Type.IDENTIFIER).name));
+                    nextExprList.add(new FactorExpr.NextExpr(factorExpr()));
                 } else if (labelType == Token.Type.L_SQUARE_BRACKET) { // id[expr][expr][expr]
                     lexer.next();
                     nextExprList.add(new FactorExpr.NextExpr(expr()));

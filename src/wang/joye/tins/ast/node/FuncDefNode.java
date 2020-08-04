@@ -1,6 +1,6 @@
 package wang.joye.tins.ast.node;
 
-import wang.joye.tins.ast.stmt.CompoundStmtNode;
+import wang.joye.tins.ast.node.stmt.CompoundStmtNode;
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.DumpUtil;
 

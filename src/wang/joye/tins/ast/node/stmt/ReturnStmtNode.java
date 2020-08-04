@@ -1,4 +1,4 @@
-package wang.joye.tins.ast.stmt;
+package wang.joye.tins.ast.node.stmt;
 
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.ast.node.StmtNode;
@@ -11,13 +11,15 @@ public class ReturnStmtNode extends StmtNode {
 
     public ExprNode expr;
 
-    public ReturnStmtNode(ExprNode expr) {
-        this.expr = expr;
+    public ReturnStmtNode() {
+
     }
 
     @Override
     public void dump(int level) {
         DumpUtil.dump(level, "return");
-        expr.dump(level +1);
+        if (expr != null) {
+            expr.dump(level + 1);
+        }
     }
 }

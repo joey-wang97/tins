@@ -13,6 +13,10 @@ public class FuncParamNode extends Node {
      * 数组维数
      */
     public int dimensionLength;
+    /**
+     * 可变数组
+     */
+    public boolean variableArr;
 
     @Override
     public void dump(int level) {

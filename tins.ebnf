@@ -1,28 +1,26 @@
-program = program (importStmt | varDef | structDef | funcDef)
+program = importStmt | varDef | structDef | funcDef
 
-(* import语句不可换行 *)
 importStmt = IMPORT ID '.' ID '.' ID
 
-varDef = TYPE ID
-       | TYPE '[' ']' ID '=' expr
+varDef = TYPE ID '=' expr | arrDef
+arrDef = TYPE[expr][expr] ID '=' arrExpr
 
-structDef = STRUCT ID '{' varDef, funcDef '}'
+structDef = STRUCT ID '{' varDef '}'
 
-funcDef = TYPE ID funcParam funcBody
+funcDef = TYPE ID funcParam compoundStmt
 
-funcParam = '(' TYPE ID, ',', TYPE ID ')'
-
-funcBody = stmt
+funcParam = '(' TYPE ID, TYPE ...ID ')'
 
 stmt = ifStmt
      | whileStmt
      | forStmt
-     | switchStmt
      | breakStmt
      | continueStmt
      | returnStmt
      | expr
-     | emptyStmt
+     | compoundStmt
+
+compoundStmt = { stmt }
 
 (* 表达式解析 *)
 expr = assignExpr
@@ -97,7 +95,7 @@ prefixUnaryExpr = '~' prefixUnaryExpr
                 | '(' TYPE ')' prefixUnaryExpr
                 | factorExpr
 
-factorExpr = factorExpr '.' ID
+factorExpr = factorExpr '.' factorExpr
            | factorExpr '[' expr ']'
            | callFuncExpr
            | ID
@@ -105,10 +103,10 @@ factorExpr = factorExpr '.' ID
            | '(' expr ')'
 
 (* 不可分割，不可链式操作 *)
-primaryExpr = NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL
+primary = NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL
             | arrExpr | structExpr
 
 callFuncExpr = ID '(' param ')'
 
-arrExpr = '[' (expr ',')* ',' ']'
-structExpr = '{' (ID ':' expr ',')* ',' '}'
+arrExpr = '[' (expr ',')* ']'
+structExpr = '{' (ID ':' expr ',')* '}'

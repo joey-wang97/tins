@@ -22,12 +22,7 @@ public class FactorExpr extends ExprNode {
      * 只能取field和arrIndex其中之一
      */
     public static class NextExpr {
-        public String field;
         public ExprNode arrIndex;
-
-        public NextExpr(String field) {
-            this.field = field;
-        }
 
         public NextExpr(ExprNode arrIndex) {
             this.arrIndex = arrIndex;

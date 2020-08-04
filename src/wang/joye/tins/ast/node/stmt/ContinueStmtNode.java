@@ -1,4 +1,4 @@
-package wang.joye.tins.ast.stmt;
+package wang.joye.tins.ast.node.stmt;
 
 import wang.joye.tins.ast.node.StmtNode;
 import wang.joye.tins.util.DumpUtil;
@@ -6,10 +6,10 @@ import wang.joye.tins.util.DumpUtil;
 /**
  * 顶层结点
  */
-public class BreakStmtNode extends StmtNode {
+public class ContinueStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "BREAK");
+        DumpUtil.dump(level, "continue");
     }
 }
