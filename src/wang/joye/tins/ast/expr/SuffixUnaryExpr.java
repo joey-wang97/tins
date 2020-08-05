@@ -11,4 +11,9 @@ public class SuffixUnaryExpr extends ExprNode {
         this.expr = expr;
         this.operator = operator;
     }
+
+    @Override
+    public void dump(int level) {
+
+    }
 }

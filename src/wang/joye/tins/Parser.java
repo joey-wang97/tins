@@ -278,6 +278,9 @@ public class Parser {
             return returnStmt;
         } else if (type == Token.Type.L_CURLY_BRACKET) {
             return compoundStmt();
+        } else if (type == Token.Type.SEMICOLON) {
+            lexer.next();
+            return new EmptyStmtNode();
         }
         if (isVarType(token)) {
             return new VarDefStmtNode(varDefs());
@@ -346,7 +349,10 @@ public class Parser {
             forStmt.condition = expr();
         }
         lexer.match(Token.Type.SEMICOLON);
-        forStmt.operation = expr();
+        // 操作表达式可能为空
+        if (lexer.peek().type != Token.Type.CLOSE_PARENTHESIS) {
+            forStmt.operation = expr();
+        }
         lexer.match(Token.Type.CLOSE_PARENTHESIS);
         forStmt.stmt = stmt();
         return forStmt;
@@ -537,8 +543,8 @@ public class Parser {
         return factorExpr();
     }
 
-    private ExprNode factorExpr() {
-        ExprNode expr = null;
+    private FactorExpr factorExpr() {
+        FactorExpr expr = null;
         Token token = lexer.peek();
         if (token.type == Token.Type.NUMBER_VAL
                 || token.type == Token.Type.STRING_VAL
@@ -564,26 +570,23 @@ public class Parser {
             lexer.match(Token.Type.CLOSE_PARENTHESIS);
             expr = new ParenthesisExpr(innerExpr);
         }
-        // 处理文法递归
-        if (expr != null) {
-            List<FactorExpr.NextExpr> nextExprList = new ArrayList<>();
-            while (true) {
-                Token.Type labelType = lexer.peek().type;
-                if (labelType == Token.Type.DOT) { // id.id.id.id
-                    lexer.next();
-                    nextExprList.add(new FactorExpr.NextExpr(factorExpr()));
-                } else if (labelType == Token.Type.L_SQUARE_BRACKET) { // id[expr][expr][expr]
-                    lexer.next();
-                    nextExprList.add(new FactorExpr.NextExpr(expr()));
-                    lexer.match(Token.Type.R_SQUARE_BRACKET);
-                } else {
-                    break;
-                }
-            }
-            return new FactorExpr(expr, nextExprList);
+        if (expr == null) {
+            lexer.error(token, "unexpected token " + token.type.name());
         }
-        lexer.error(token, "unexpected token " + token.type.name());
-        return new ExprNode();
+        FactorExpr factorExpr = new FactorExpr(expr);
+        List<ExprNode> arrIndexList = new LinkedList<>();
+        // factor[0][1][2]
+        while(lexer.peek().type == Token.Type.L_SQUARE_BRACKET) {
+            lexer.next();
+            arrIndexList.add(expr);
+            lexer.match(Token.Type.R_SQUARE_BRACKET);
+        }
+        factorExpr.arrIndexList = arrIndexList;
+        if (lexer.peek().type == Token.Type.DOT) {
+            lexer.next();
+            factorExpr.nextFactor = factorExpr();
+        }
+        return factorExpr;
     }
 
     public CallFuncExprNode callFuncExpr(String funcName) {

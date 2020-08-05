@@ -4,7 +4,7 @@ import wang.joye.tins.ast.node.ExprNode;
 
 import java.util.List;
 
-public class CallFuncExprNode extends ExprNode {
+public class CallFuncExprNode extends FactorExpr {
     public List<ExprNode> params;
     public String funcName;
 

@@ -9,7 +9,7 @@ import java.util.List;
  * 数组赋值语句
  * [1, 2.0, func1()]
  */
-public class ObjectExpr extends ExprNode {
+public class ObjectExpr extends FactorExpr {
     public List<ObjectField> fields;
 
     public ObjectExpr() {

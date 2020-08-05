@@ -1,6 +1,7 @@
 package wang.joye.tins.ast.expr;
 
 import wang.joye.tins.ast.node.ExprNode;
+import wang.joye.tins.util.DumpUtil;
 
 import java.util.List;
 
@@ -9,23 +10,27 @@ import java.util.List;
  * 根据产生式.
  */
 public class FactorExpr extends ExprNode {
+    // factor[0][1][2].factor[0][1].factor[1]
+    // 有三个factorExpr，第一个包含三个arrExpr
     public ExprNode expr;
-    List<NextExpr> nextExprs;
+    public FactorExpr nextFactor;
+    public List<ExprNode> arrIndexList;
 
-    public FactorExpr(ExprNode expr, List<NextExpr> nextExprs) {
-        this.expr = expr;
-        this.nextExprs = nextExprs;
+    public FactorExpr() {
     }
 
-    /**
-     * factor的下一个操作符
-     * 只能取field和arrIndex其中之一
-     */
-    public static class NextExpr {
-        public ExprNode arrIndex;
+    public FactorExpr(ExprNode expr) {
+        this.expr = expr;
+    }
 
-        public NextExpr(ExprNode arrIndex) {
-            this.arrIndex = arrIndex;
-        }
+    @Override
+    public void dump(int level) {
+        DumpUtil.dump(level, "FactorExpr");
+        DumpUtil.dump(level + 1, "expr");
+        expr.dump(level + 2);
+        DumpUtil.dump(level + 1, "nextFactor");
+        nextFactor.dump(level + 2);
+        DumpUtil.dump(level + 1, "nextFactor");
+        arrIndexList.forEach(i -> i.dump(level + 2));
     }
 }

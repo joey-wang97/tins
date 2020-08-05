@@ -9,7 +9,7 @@ import java.util.List;
  * 数组赋值语句
  * [1, 2.0, func1()]
  */
-public class ArrExpr extends ExprNode {
+public class ArrExpr extends FactorExpr {
     public List<ExprNode> exprs;
 
     public ArrExpr() {

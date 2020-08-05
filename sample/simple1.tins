@@ -27,7 +27,7 @@ func void stmtTest() {
         return test;
     }
     for(; ; ) {
-        return test;
+        return test[0][1].cc[2][d].a;
     }
 
     while(1) {
