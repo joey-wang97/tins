@@ -9,6 +9,6 @@ public class StmtNode extends Node{
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "stmt node shouldn't show");
+        System.err.println("stmt node shouldn't show");
     }
 }

@@ -166,7 +166,7 @@ public class Parser {
             lexer.next();
             // 数组维数可能为空
             if (lexer.peek().type == Token.Type.R_SQUARE_BRACKET) {
-                arrDef.addDimensionLength(new ExprNode());
+                arrDef.addDimensionLength(null);
             } else {
                 arrDef.addDimensionLength(expr());
             }
@@ -576,9 +576,9 @@ public class Parser {
         FactorExpr factorExpr = new FactorExpr(expr);
         List<ExprNode> arrIndexList = new LinkedList<>();
         // factor[0][1][2]
-        while(lexer.peek().type == Token.Type.L_SQUARE_BRACKET) {
+        while (lexer.peek().type == Token.Type.L_SQUARE_BRACKET) {
             lexer.next();
-            arrIndexList.add(expr);
+            arrIndexList.add(expr());
             lexer.match(Token.Type.R_SQUARE_BRACKET);
         }
         factorExpr.arrIndexList = arrIndexList;
@@ -632,15 +632,15 @@ public class Parser {
     /**
      * 结构体赋值语句
      */
-    public ObjectExpr structExpr() {
+    public StructAssignExpr structExpr() {
         lexer.match(Token.Type.L_CURLY_BRACKET);
-        ObjectExpr objectExpr = new ObjectExpr();
+        StructAssignExpr structAssignExpr = new StructAssignExpr();
         if (lexer.peek().type == Token.Type.R_CURLY_BRACKET) {
             lexer.next();
-            return objectExpr;
+            return structAssignExpr;
         }
         while (true) {
-            ObjectExpr.ObjectField field = new ObjectExpr.ObjectField();
+            StructAssignExpr.ObjectField field = new StructAssignExpr.ObjectField();
             // {field: 1}
             if (lexer.lookAhead(1).type == Token.Type.COLON) {
                 field.name = lexer.match(Token.Type.IDENTIFIER).name;
@@ -653,7 +653,7 @@ public class Parser {
             else if (label.type != Token.Type.COMMA)
                 lexer.unexpectedToken(label);
         }
-        return objectExpr;
+        return structAssignExpr;
     }
 
     /**

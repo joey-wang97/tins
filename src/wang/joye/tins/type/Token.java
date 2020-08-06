@@ -9,10 +9,15 @@ public class Token {
     public Object value;
     public int line, srcPosition;
 
-    public Token(){}
+    public Token() {
+    }
 
     public Token(Type type) {
         this.type = type;
+    }
+
+    public String getTypeName() {
+        return name == null ? type.name() : name;
     }
 
     public enum Type {

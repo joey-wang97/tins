@@ -14,5 +14,6 @@ public class CaseStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
+
     }
 }

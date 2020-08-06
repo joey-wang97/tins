@@ -2,6 +2,7 @@ package wang.joye.tins.ast.expr;
 
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.type.Token;
+import wang.joye.tins.util.DumpUtil;
 
 public class SuffixUnaryExpr extends ExprNode {
     public ExprNode expr;
@@ -14,6 +15,7 @@ public class SuffixUnaryExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-
+        DumpUtil.dump(level, "SuffixUnaryExpr: " + operator.name());
+        expr.dump(level + 1);
     }
 }

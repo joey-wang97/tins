@@ -27,10 +27,15 @@ public class FactorExpr extends ExprNode {
     public void dump(int level) {
         DumpUtil.dump(level, "FactorExpr");
         DumpUtil.dump(level + 1, "expr");
+        if (expr == null) {
+            System.out.println("unbelievable");
+        }
         expr.dump(level + 2);
         DumpUtil.dump(level + 1, "nextFactor");
-        nextFactor.dump(level + 2);
-        DumpUtil.dump(level + 1, "nextFactor");
-        arrIndexList.forEach(i -> i.dump(level + 2));
+        if (nextFactor != null)
+            nextFactor.dump(level + 2);
+        DumpUtil.dump(level + 1, "arrIndexList");
+        if (arrIndexList != null)
+            arrIndexList.forEach(i -> i.dump(level + 2));
     }
 }

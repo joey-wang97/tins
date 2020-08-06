@@ -34,7 +34,10 @@ public class VarDefNode extends Node {
         DumpUtil.dump(level, "var: " + varTypeName + " " + varName + dimensionStr);
         for (int i = 0; i < eachDimensionLength.size(); i++) {
             DumpUtil.dump(level + 1, "dimension[" + i + "]:");
-            eachDimensionLength.get(i).dump(level + 2);
+            if (eachDimensionLength.get(i) == null) {
+                DumpUtil.dump(level+2, "empty dimension");
+            } else
+                eachDimensionLength.get(i).dump(level + 2);
         }
         if (value != null)
             value.dump(level + 1);
