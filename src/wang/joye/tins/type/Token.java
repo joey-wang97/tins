@@ -107,6 +107,7 @@ public class Token {
         return "Token{" +
                 "type=" + type +
                 ", name='" + name + '\'' +
+                ", value=" + value +
                 ", line=" + line +
                 ", srcPosition=" + srcPosition +
                 '}';

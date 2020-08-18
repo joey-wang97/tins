@@ -334,7 +334,7 @@ public class Lexer {
 
     private int parseOct() {
         char c = charAt(srcPosition);
-        int sum = c - '0';
+        int sum = 0;
         while (c >= '0' && c <= '7') {
             sum = sum * 8 + c - '0';
             c = charAt(++srcPosition);

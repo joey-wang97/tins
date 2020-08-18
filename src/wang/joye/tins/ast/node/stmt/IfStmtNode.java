@@ -35,7 +35,7 @@ public class IfStmtNode extends StmtNode {
             DumpUtil.dump(level + 2, "condition:");
             i.condition.dump(level + 3);
             DumpUtil.dump(level + 2, "stmt:");
-            i.condition.dump(level + 3);
+            i.stmt.dump(level + 3);
         });
         if (elseStmt != null) {
             DumpUtil.dump(level + 1, "else stmt:");

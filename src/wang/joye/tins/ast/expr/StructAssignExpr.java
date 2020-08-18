@@ -11,15 +11,7 @@ import java.util.List;
  * [1, 2.0, func1()]
  */
 public class StructAssignExpr extends FactorExpr {
-    public List<ObjectField> fields;
-
-    public StructAssignExpr() {
-        this.fields = new LinkedList<>();
-    }
-
-    public void addValue(ObjectField field) {
-        this.fields.add(field);
-    }
+    public List<ObjectField> fields = new LinkedList<>();
 
     @Override
     public void dump(int level) {

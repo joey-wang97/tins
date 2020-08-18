@@ -4,8 +4,6 @@ import wang.joye.tins.ast.AST;
 import wang.joye.tins.ast.expr.*;
 import wang.joye.tins.ast.node.*;
 import wang.joye.tins.ast.node.stmt.*;
-import wang.joye.tins.symbol.StructSymbol;
-import wang.joye.tins.symbol.SymbolTable;
 import wang.joye.tins.type.Token;
 
 import java.util.ArrayList;
@@ -15,6 +13,7 @@ import java.util.List;
 public class Parser {
 
     Lexer lexer;
+    private List<String> structNames = new ArrayList<>();
 
     public Parser(String fileName) {
         lexer = new Lexer(fileName);
@@ -58,7 +57,7 @@ public class Parser {
             if (token.type == Token.Type.END)
                 break;
             String structName = lexer.match(Token.Type.IDENTIFIER).name;
-            SymbolTable.addStruct(structName);
+            structNames.add(structName);
             token = lexer.peek();
         }
     }
@@ -94,7 +93,7 @@ public class Parser {
     private StructDefNode structDef() {
         StructDefNode structDefNode = new StructDefNode();
         lexer.match(Token.Type.STRUCT);
-        structDefNode.name = lexer.match(Token.Type.IDENTIFIER).name;
+        structDefNode.nameToken = lexer.match(Token.Type.IDENTIFIER);
         lexer.match(Token.Type.L_CURLY_BRACKET);
 
         // 解析结构体属性
@@ -113,7 +112,7 @@ public class Parser {
         if (!isVarType(funcType) && funcType.type != Token.Type.VOID)
             lexer.error(funcType, "func type can't be " + funcType.name);
         funcDefNode.funcType = funcType;
-        funcDefNode.funcName = lexer.match(Token.Type.IDENTIFIER).name;
+        funcDefNode.funcName = lexer.match(Token.Type.IDENTIFIER);
         if (funcDefNode.funcName.equals("main")) {
             // TODO main func
         }
@@ -139,7 +138,7 @@ public class Parser {
         while (true) {
             VarDefNode varDefNode = new VarDefNode();
             varDefNode.varType = varType;
-            varDefNode.varName = lexer.match(Token.Type.IDENTIFIER).name;
+            varDefNode.varName = lexer.match(Token.Type.IDENTIFIER);
             Token label = lexer.peek();
             if (label.type == Token.Type.ASSIGN) {
                 lexer.next();
@@ -172,7 +171,7 @@ public class Parser {
             }
             lexer.match(Token.Type.R_SQUARE_BRACKET);
         }
-        arrDef.varName = lexer.match(Token.Type.IDENTIFIER).name;
+        arrDef.varName = lexer.match(Token.Type.IDENTIFIER);
         if (lexer.peek().type == Token.Type.ASSIGN) {
             lexer.next();
             arrDef.value = expr();
@@ -190,9 +189,9 @@ public class Parser {
         if (token.type.ordinal() >= Token.Type.INT.ordinal() && token.type.ordinal() <= Token.Type.DOUBLE.ordinal())
             return true;
         if (token.type == Token.Type.IDENTIFIER) {
-            // 检查符号表中有没有该变量
-            for (StructSymbol structSymbol : SymbolTable.structSymbols) {
-                if (structSymbol.name.equals(token.name))
+            // 检查是否结构体名称
+            for (String name : structNames) {
+                if (name.equals(token.name))
                     return true;
             }
         }
@@ -320,6 +319,7 @@ public class Parser {
                 elseIfStmt.condition = expr();
                 lexer.match(Token.Type.CLOSE_PARENTHESIS);
                 elseIfStmt.stmt = stmt();
+                ifStmtNode.elseIfStmts.add(elseIfStmt);
             } else { // 遇到else语句，则不再循环匹配else if
                 ifStmtNode.elseStmt = stmt();
                 break;
@@ -531,7 +531,7 @@ public class Parser {
         } else if (labelType == Token.Type.OPEN_PARENTHESIS) {
             // 类型转换表达式
             Token token = lexer.lookAhead(1);
-            if (isVarType(token) || isCastType(token)) {
+            if (isVarType(token)) {
                 // 吞掉左括号
                 lexer.next();
                 // 吞掉token，即转换类型
@@ -648,26 +648,12 @@ public class Parser {
             }
             field.expr = expr();
             Token label = lexer.next();
+            structAssignExpr.fields.add(field);
             if (label.type == Token.Type.R_CURLY_BRACKET)
                 break;
             else if (label.type != Token.Type.COMMA)
                 lexer.unexpectedToken(label);
         }
         return structAssignExpr;
-    }
-
-    /**
-     * 判断token是否强转的类型
-     * 即是否struct的name
-     */
-    public boolean isCastType(Token token) {
-        if (token.type != Token.Type.IDENTIFIER) {
-            return false;
-        }
-        for (StructSymbol structSymbol : SymbolTable.structSymbols) {
-            if (structSymbol.name.equals(token.name))
-                return true;
-        }
-        return false;
     }
 }

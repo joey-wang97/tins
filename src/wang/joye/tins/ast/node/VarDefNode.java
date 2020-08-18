@@ -12,8 +12,9 @@ import java.util.List;
 public class VarDefNode extends Node {
 
     public Token varType;
-    public String varName;
+    public Token varName;
     public List<ExprNode> eachDimensionLength = new LinkedList<>();
+    // 赋值表达式
     public ExprNode value;
 
     /**

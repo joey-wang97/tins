@@ -21,6 +21,11 @@ func void stmtTest() {
         continue;
     } else if( b > a) {
         return;
+    } else {
+        if( c.d == a)
+            return c;
+        else
+            return d[0];
     }
 
     for(int i = a+b; b < d.f(1); z+=3) {
@@ -45,7 +50,6 @@ func void main() {
     int a = 1;
 
     string[] x = ["1", "2", "3"];
-    string[] x = ["1", "2", "3"];
     Circle circle1 = [1.0, 2.0];
     Circle circle2 = {
         center: 1.0,
@@ -55,7 +59,9 @@ func void main() {
     Circle[] arr = [circle1, circle2];
 
     int[2] arr1 = [1, 2];
-    float[3][1] arr2 = [[1], [2], [3]];
+    float[3][1] arr2 = [[1], [2,2], [3,3,3]];
+
+    int a=1,b =2, c=3;
 
     print(getOne());
 }

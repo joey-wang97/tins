@@ -11,9 +11,10 @@ import java.util.List;
  */
 public class FuncDefNode extends Node {
     // 拥有函数的Struct: func Circle.area() -> owner is Circle
+    // 暂未使用
     public String owner;
     public Token funcType;
-    public String funcName;
+    public Token funcName;
     public List<FuncParamNode> paramNode;
     public CompoundStmtNode bodyStmt;
 

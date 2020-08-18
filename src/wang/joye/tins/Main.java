@@ -1,6 +1,7 @@
 package wang.joye.tins;
 
 import wang.joye.tins.ast.AST;
+import wang.joye.tins.ast.expr.FactorExpr;
 import wang.joye.tins.type.Token;
 
 import java.io.BufferedWriter;
@@ -11,9 +12,10 @@ public class Main {
 
     public static void main(String[] args) {
         String testFile = "sample/simple1.tins";
-        // testLexer(testFile);
-        testParser(testFile);
+        // testLexer("sample/lexer.test");
+        // testParser(testFile);
         // testPreParser(testFile);
+        FactorExpr expr = null;
     }
 
     public static void testLexer(String fileName) {

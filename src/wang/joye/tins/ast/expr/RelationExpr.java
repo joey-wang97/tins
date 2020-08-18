@@ -16,11 +16,10 @@ public class RelationExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "Relation Expr");
-        DumpUtil.dump(level+1, "operator: "+ operator.name());
-        DumpUtil.dump(level+1, "left Expr");
-        leftExpr.dump(level+2);
-        DumpUtil.dump(level+1, "right Expr");
-        rightExpr.dump(level+2);
+        DumpUtil.dump(level, "RelationExpr operator: "+ operator.name());
+        DumpUtil.dump(level, "left Expr");
+        leftExpr.dump(level+1);
+        DumpUtil.dump(level, "right Expr");
+        rightExpr.dump(level+1);
     }
 }

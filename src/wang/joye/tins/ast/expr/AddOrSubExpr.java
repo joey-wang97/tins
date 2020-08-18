@@ -16,6 +16,11 @@ public class AddOrSubExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "add or sub expr");
+        DumpUtil.dump(level, "expr: " + operator.name());
+        DumpUtil.dump(level, "left expr");
+        leftExpr.dump(level + 1);
+        DumpUtil.dump(level, "right expr");
+        rightExpr.dump(level + 1);
+
     }
 }
