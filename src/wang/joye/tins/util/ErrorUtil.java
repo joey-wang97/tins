@@ -5,4 +5,9 @@ public class ErrorUtil {
         System.err.println("at line " + line + ": " + message);
         System.exit(-1);
     }
+
+    public static void error(String message) {
+        System.err.println(message);
+        System.exit(-1);
+    }
 }

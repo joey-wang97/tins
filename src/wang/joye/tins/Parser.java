@@ -3,7 +3,7 @@ package wang.joye.tins;
 import wang.joye.tins.ast.AST;
 import wang.joye.tins.ast.expr.*;
 import wang.joye.tins.ast.node.*;
-import wang.joye.tins.ast.node.stmt.*;
+import wang.joye.tins.ast.stmt.*;
 import wang.joye.tins.type.Token;
 
 import java.util.ArrayList;
@@ -98,7 +98,7 @@ public class Parser {
 
         // 解析结构体属性
         while (lexer.peek().type != Token.Type.R_CURLY_BRACKET) {
-            structDefNode.fields.addAll(varDefs());
+            structDefNode.fieldDefs.addAll(varDefs());
         }
         lexer.match(Token.Type.R_CURLY_BRACKET);
         return structDefNode;
@@ -111,9 +111,9 @@ public class Parser {
         // 检查函数类型是否合法
         if (!isVarType(funcType) && funcType.type != Token.Type.VOID)
             lexer.error(funcType, "func type can't be " + funcType.name);
-        funcDefNode.funcType = funcType;
-        funcDefNode.funcName = lexer.match(Token.Type.IDENTIFIER);
-        if (funcDefNode.funcName.equals("main")) {
+        funcDefNode.funcTypeToken = funcType;
+        funcDefNode.funcNameToken = lexer.match(Token.Type.IDENTIFIER);
+        if (funcDefNode.funcNameToken.equals("main")) {
             // TODO main func
         }
         funcDefNode.paramNode = funParam();
@@ -137,8 +137,8 @@ public class Parser {
         Token varType = lexer.next();
         while (true) {
             VarDefNode varDefNode = new VarDefNode();
-            varDefNode.varType = varType;
-            varDefNode.varName = lexer.match(Token.Type.IDENTIFIER);
+            varDefNode.varTypeToken = varType;
+            varDefNode.varNameToken = lexer.match(Token.Type.IDENTIFIER);
             Token label = lexer.peek();
             if (label.type == Token.Type.ASSIGN) {
                 lexer.next();
@@ -160,7 +160,7 @@ public class Parser {
 
     private VarDefNode arrDef() {
         VarDefNode arrDef = new VarDefNode();
-        arrDef.varType = lexer.next();
+        arrDef.varTypeToken = lexer.next();
         while (lexer.peek().type == Token.Type.L_SQUARE_BRACKET) {
             lexer.next();
             // 数组维数可能为空
@@ -171,7 +171,7 @@ public class Parser {
             }
             lexer.match(Token.Type.R_SQUARE_BRACKET);
         }
-        arrDef.varName = lexer.match(Token.Type.IDENTIFIER);
+        arrDef.varNameToken = lexer.match(Token.Type.IDENTIFIER);
         if (lexer.peek().type == Token.Type.ASSIGN) {
             lexer.next();
             arrDef.value = expr();
@@ -212,9 +212,9 @@ public class Parser {
 
         while (true) {
             FuncParamNode funcParamNode = new FuncParamNode();
-            funcParamNode.paramType = lexer.next();
-            if (!isVarType(funcParamNode.paramType)) {
-                lexer.error(funcParamNode.paramType, "func param type can't be " + funcParamNode.paramType.type.name());
+            funcParamNode.paramTypeToken = lexer.next();
+            if (!isVarType(funcParamNode.paramTypeToken)) {
+                lexer.error(funcParamNode.paramTypeToken, "func param type can't be " + funcParamNode.paramTypeToken.type.name());
             }
             // 判断数组
             int dimensionLength = 0;
@@ -230,7 +230,7 @@ public class Parser {
                 funcParamNode.variableArr = true;
             }
 
-            funcParamNode.paramName = lexer.match(Token.Type.IDENTIFIER).name;
+            funcParamNode.paramNameToken = lexer.match(Token.Type.IDENTIFIER);
             funcParamNode.dimensionLength = dimensionLength;
 
             Token label = lexer.next();
@@ -630,7 +630,7 @@ public class Parser {
     }
 
     /**
-     * 结构体赋值语句
+     * 结构体赋值语句, 必须指定属性
      */
     public StructAssignExpr structExpr() {
         lexer.match(Token.Type.L_CURLY_BRACKET);
@@ -642,13 +642,12 @@ public class Parser {
         while (true) {
             StructAssignExpr.ObjectField field = new StructAssignExpr.ObjectField();
             // {field: 1}
-            if (lexer.lookAhead(1).type == Token.Type.COLON) {
-                field.name = lexer.match(Token.Type.IDENTIFIER).name;
-                lexer.match(Token.Type.COLON);
-            }
+            // 赋值时必须指定属性
+            field.nameToken = lexer.match(Token.Type.IDENTIFIER);
+            lexer.match(Token.Type.COLON);
             field.expr = expr();
             Token label = lexer.next();
-            structAssignExpr.fields.add(field);
+            structAssignExpr.fieldValues.add(field);
             if (label.type == Token.Type.R_CURLY_BRACKET)
                 break;
             else if (label.type != Token.Type.COMMA)

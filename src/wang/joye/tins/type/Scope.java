@@ -14,8 +14,8 @@ public class Scope {
 
     public void addAndCheck(VarDefNode varNode) {
         varList.forEach(i -> {
-            if (i.varName.name.equals(varNode.varName.name)) {
-                throw new RuntimeException("at line " + varNode.varName.line + " :duplicated def: " + varNode.varName);
+            if (i.varNameToken.name.equals(varNode.varNameToken.name)) {
+                throw new RuntimeException("at line " + varNode.varNameToken.line + " :duplicated def: " + varNode.varNameToken);
             }
         });
         varList.add(varNode);

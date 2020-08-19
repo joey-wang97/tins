@@ -1,4 +1,4 @@
-package wang.joye.tins.ast.node.stmt;
+package wang.joye.tins.ast.stmt;
 
 import wang.joye.tins.ast.node.StmtNode;
 import wang.joye.tins.util.DumpUtil;

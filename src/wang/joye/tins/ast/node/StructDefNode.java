@@ -11,13 +11,21 @@ import java.util.List;
  */
 public class StructDefNode extends Node {
     public Token nameToken;
-    public List<VarDefNode> fields = new ArrayList<>();
+    public List<VarDefNode> fieldDefs = new ArrayList<>();
+
+    public VarDefNode getFieldDef(String name) {
+        for (VarDefNode fieldDef : fieldDefs) {
+            if (fieldDef.varNameToken.name.equals(name))
+                return fieldDef;
+        }
+        return null;
+    }
 
     @Override
     public void dump(int level) {
         DumpUtil.dump(level, "struct name: " + nameToken);
         DumpUtil.dump(level, "struct fields:");
-        fields.forEach(i -> i.dump(level + 1));
+        fieldDefs.forEach(i -> i.dump(level + 1));
         System.out.println();
     }
 }

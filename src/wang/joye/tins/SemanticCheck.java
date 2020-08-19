@@ -2,6 +2,7 @@ package wang.joye.tins;
 
 import wang.joye.tins.ast.AST;
 import wang.joye.tins.ast.expr.ArrExpr;
+import wang.joye.tins.ast.expr.StructAssignExpr;
 import wang.joye.tins.ast.node.*;
 import wang.joye.tins.type.Scope;
 import wang.joye.tins.type.Token;
@@ -12,11 +13,15 @@ import java.util.List;
 
 public class SemanticCheck {
 
+    public static AST globalAst = null;
+
     // 所有struct的名字
     private static List<String> structNames = new ArrayList<>();
     private static Scope topScope = new Scope();
 
     public static void check(AST ast) {
+        // 保存ast，结构体检查时需要获取其中的struct定义
+        globalAst = ast;
         // TODO check import
         checkStructDef(ast.structDefNodes);
         checkVarDefs(ast.varDefNodes);
@@ -30,7 +35,7 @@ public class SemanticCheck {
                 ErrorUtil.error(structDef.nameToken.line, "duplicated struct name: " + structDef.nameToken.name);
             }
             structNames.add(structDef.nameToken.name);
-            checkVarDefs(structDef.fields);
+            checkVarDefs(structDef.fieldDefs);
         }
     }
 
@@ -38,10 +43,10 @@ public class SemanticCheck {
         List<String> varNames = new ArrayList<>(varDefs.size());
         // 检查是否存在同名变量
         for (VarDefNode var : varDefs) {
-            if (varNames.contains(var.varName.name)) {
-                ErrorUtil.error(var.varName.line, "duplicated var define: " + var.varName.name);
+            if (varNames.contains(var.varNameToken.name)) {
+                ErrorUtil.error(var.varNameToken.line, "duplicated var define: " + var.varNameToken.name);
             }
-            varNames.add(var.varName.name);
+            varNames.add(var.varNameToken.name);
             checkVarDef(var);
         }
     }
@@ -59,7 +64,7 @@ public class SemanticCheck {
 
     private static void checkSameFunc(FuncDefNode func1, FuncDefNode func2) {
         // 函数名不同
-        if (!func1.funcName.name.equals(func2.funcName.name))
+        if (!func1.funcNameToken.name.equals(func2.funcNameToken.name))
             return;
         // 函数参数不同
         if (func1.paramNode.size() != func2.paramNode.size())
@@ -75,25 +80,30 @@ public class SemanticCheck {
             if (func1Param.variableArr != func2Param.variableArr)
                 return;
             // 参数类型不一致
-            if (func1Param.paramType.type != func2Param.paramType.type)
+            if (func1Param.paramTypeToken.type != func2Param.paramTypeToken.type)
                 return;
             // 如果参数都是自定义类型，但是类型名不一样
             // func1(Dog dog)
             // func2(Cat cat)
-            if (func1Param.paramType.type == Token.Type.IDENTIFIER
-                    && !func1Param.paramType.name.equals(func2Param.paramType.name))
+            if (func1Param.paramTypeToken.type == Token.Type.IDENTIFIER
+                    && !func1Param.paramTypeToken.name.equals(func2Param.paramTypeToken.name))
                 return;
         }
         // 以上条件都不满足，证明函数在各个方面都一致，即重复定义了函数
-        ErrorUtil.error(func2.funcName.line, "duplicated func define: " + func2.funcName.name);
+        ErrorUtil.error(func2.funcNameToken.line, "duplicated func define: " + func2.funcNameToken.name);
     }
 
     private static void checkVarDef(VarDefNode varDef) {
-        // 如果变量为数组类型
+        // 如果变量为数组
         if (varDef.eachDimensionLength.size() > 0) {
             checkArrDef(varDef);
         }
-        // TODO 检查左值和右值类型
+        // 如果变量为结构体(自定义类型)
+        if (varDef.varTypeToken.type == Token.Type.IDENTIFIER) {
+            checkStructDef(varDef);
+        }
+        // 检查左值和右值是否匹配
+        ExprUtil.checkMatch(varDef.varTypeToken, varDef.value);
     }
 
     private static void checkArrDef(VarDefNode varDef) {
@@ -101,28 +111,72 @@ public class SemanticCheck {
         if (varDef.value == null) {
             for (int i = 0; i < varDef.eachDimensionLength.size(); i++) {
                 if (varDef.eachDimensionLength.get(i) == null) {
-                    ErrorUtil.error(varDef.varName.line, "array must initialize dimension");
+                    ErrorUtil.error(varDef.varNameToken.line, "array must initialize dimension");
                 }
             }
             return;
         }
         // value如果不为空，必须为数组表达式
         if (!(varDef.value instanceof ArrExpr)) {
-            ErrorUtil.error(varDef.varName.line, "var type is array, var value is " + varDef.value.getClass());
+            ErrorUtil.error(varDef.varNameToken.line, "var type is array, var value is " + varDef.value.getClass());
         }
 
         // 检查数组定义维度和表达式维度是否一致
         int dimension = 1;
-        ArrExpr value = (ArrExpr) varDef.value;
-        while (value.exprs.get(0) instanceof ArrExpr) {
+        ArrExpr arrExpr = (ArrExpr) varDef.value;
+        while (arrExpr.exprs.get(0) instanceof ArrExpr) {
             dimension++;
-            value = (ArrExpr) value.exprs.get(0);
+            arrExpr = (ArrExpr) arrExpr.exprs.get(0);
         }
         if (dimension != varDef.eachDimensionLength.size()) {
-            ErrorUtil.error(varDef.varName.line, "array define and array value has different dimension");
+            ErrorUtil.error(varDef.varNameToken.line, "array define and array value has different dimension");
+        }
+
+        // 检查数组中每个元素，类型是否正确
+        for (ExprNode arrElement : arrExpr.exprs) {
+            ExprUtil.checkMatch(varDef.varTypeToken, arrElement);
         }
     }
 
+    private static void checkStructDef(VarDefNode varDef) {
+        if (!(varDef.value instanceof StructAssignExpr)) {
+            ErrorUtil.error(varDef.varNameToken.line, varDef.value.getClass() + "cannot assign to " + varDef.varTypeToken.name);
+        }
+        StructAssignExpr structAssignExpr = (StructAssignExpr) varDef.value;
+
+        // 从AST中查找结构体的定义
+        StructDefNode structDef = null;
+        for (StructDefNode i : globalAst.structDefNodes) {
+            if (i.nameToken.name.equals(varDef.varTypeToken.name)) {
+                structDef = i;
+                break;
+            }
+        }
+        // 如果没有找到对应结构体，则抛出错误
+        if (structDef == null) {
+            ErrorUtil.error(varDef.varTypeToken.line, "cannot find struct define: " + varDef.varNameToken.name);
+        }
+
+        if (structAssignExpr.fieldValues.size() > structDef.fieldDefs.size()) {
+            ErrorUtil.error("too many field in struct: " + structDef.nameToken.name);
+        }
+        // 如果赋值结构体时，每个属性前必须加属性名
+        for (StructAssignExpr.ObjectField fieldValue : structAssignExpr.fieldValues) {
+            // 检查是否具有属性名
+            if (fieldValue.nameToken == null) {
+                ErrorUtil.error(ExprUtil.getLine(fieldValue.expr), "you must specified field name in " + varDef.varNameToken.value);
+            }
+            VarDefNode fieldDef = structDef.getFieldDef(fieldValue.nameToken.name);
+
+            // 检查属性定义和属性表达式，是否匹配
+            ExprUtil.checkMatch(fieldDef.varTypeToken, fieldValue.expr);
+        }
+    }
+
+    /**
+     * 检查函数定义是否合法
+     * 此处不需要检查函数重复定义的问题，在之前已经检查过
+     */
     private static void checkFuncDef(FuncDefNode funcDef) {
 
     }

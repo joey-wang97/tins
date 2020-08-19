@@ -11,8 +11,8 @@ import java.util.List;
  */
 public class VarDefNode extends Node {
 
-    public Token varType;
-    public Token varName;
+    public Token varTypeToken;
+    public Token varNameToken;
     public List<ExprNode> eachDimensionLength = new LinkedList<>();
     // 赋值表达式
     public ExprNode value;
@@ -26,13 +26,13 @@ public class VarDefNode extends Node {
 
     @Override
     public void dump(int level) {
-        String varTypeName = varType.name == null ? varType.type.name() : varType.name;
+        String varTypeName = varTypeToken.name == null ? varTypeToken.type.name() : varTypeToken.name;
         // 维度描述
         StringBuilder dimensionStr = new StringBuilder();
         for (int i = 0; i < eachDimensionLength.size(); i++) {
             dimensionStr.append("[]");
         }
-        DumpUtil.dump(level, "var: " + varTypeName + " " + varName + dimensionStr);
+        DumpUtil.dump(level, "var: " + varTypeName + " " + varNameToken + dimensionStr);
         for (int i = 0; i < eachDimensionLength.size(); i++) {
             DumpUtil.dump(level + 1, "dimension[" + i + "]:");
             if (eachDimensionLength.get(i) == null) {

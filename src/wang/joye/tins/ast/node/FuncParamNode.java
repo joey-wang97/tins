@@ -7,8 +7,8 @@ import wang.joye.tins.util.DumpUtil;
  * 函数参数节点
  */
 public class FuncParamNode extends Node {
-    public Token paramType;
-    public String paramName;
+    public Token paramTypeToken;
+    public Token paramNameToken;
     /**
      * 数组维数
      */
@@ -20,9 +20,9 @@ public class FuncParamNode extends Node {
 
     @Override
     public void dump(int level) {
-        String paramTypeName = paramType.name == null ? paramType.type.name() : paramType.name;
-        DumpUtil.dump(level, "func param: " + paramTypeName + " " + paramName +
-                (dimensionLength > 0 ? "[" + dimensionLength + "]" : ""));
+        String paramTypeName = paramTypeToken.name == null ? paramTypeToken.type.name() : paramTypeToken.name;
+        DumpUtil.dump(level, "func param: " + paramTypeName + " " + paramNameToken.name
+                + (dimensionLength > 0 ? "[" + dimensionLength + "]" : ""));
 
     }
 }
