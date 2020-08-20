@@ -4,6 +4,7 @@ import wang.joye.tins.ast.AST;
 import wang.joye.tins.ast.expr.ArrExpr;
 import wang.joye.tins.ast.expr.StructAssignExpr;
 import wang.joye.tins.ast.node.*;
+import wang.joye.tins.ast.stmt.*;
 import wang.joye.tins.type.Scope;
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.ErrorUtil;
@@ -178,10 +179,74 @@ public class SemanticCheck {
      * 此处不需要检查函数重复定义的问题，在之前已经检查过
      */
     private static void checkFuncDef(FuncDefNode funcDef) {
+        // 检查函数语句是否合法
+        SemanticCheck.checkCompoundStmt(funcDef.bodyStmt);
 
+        // 检查return语句和函数返回类型是否一致
+        if (funcDef.funcTypeToken.type != Token.Type.VOID) {
+            if (funcDef.bodyStmt.stmts.size() == 0) {
+                ErrorUtil.error(funcDef.funcTypeToken.line, "func " + funcDef.funcNameToken.name + " must contain return stmt");
+            }
+            // 检查函数体的return语句
+            if (!checkStmtReturnType(funcDef.funcTypeToken, funcDef.bodyStmt)) {
+                ErrorUtil.error(funcDef.funcTypeToken.line, "func " + funcDef.funcNameToken.name + " must contain return stmt");
+            }
+        }
     }
+
+    private static void checkCompoundStmt(CompoundStmtNode compoundStmt) {
+        // TODO 是使用visitor模式？还是?
+    }
+
 
     private static void checkExpr(ExprNode expr) {
 
+    }
+
+    /**
+     * 检查 stmt是否return语句，或者是否包含return语句, 如:
+     * <pre>
+     *  if(condition)
+     *      return a;
+     *  else
+     *      return b;
+     * </pre>
+     * 先检查是否为return，再检查return的类型是否与期望类型一致.
+     */
+    private static boolean checkStmtReturnType(Token type, StmtNode stmt) {
+        if (stmt instanceof ReturnStmtNode) {
+            ExprUtil.checkMatch(type, ((ReturnStmtNode) stmt).expr);
+        }
+        if (stmt instanceof CompoundStmtNode) {
+            // 取出函数体的最后一条语句
+            CompoundStmtNode compoundStmt = (CompoundStmtNode) stmt;
+            if (compoundStmt.stmts.size() == 0) {
+                return false;
+            }
+            StmtNode lastStmt = compoundStmt.stmts.get(compoundStmt.stmts.size() - 1);
+            return checkStmtReturnType(type, lastStmt);
+        }
+        if (stmt instanceof IfStmtNode) {
+            IfStmtNode ifStmtNode = (IfStmtNode) stmt;
+            if (!checkStmtReturnType(type, ifStmtNode.ifStmt))
+                return false;
+            for (IfStmtNode.ElseIfStmt elseIfStmt : ifStmtNode.elseIfStmts) {
+                if (!checkStmtReturnType(type, elseIfStmt.stmt))
+                    return false;
+            }
+            if (ifStmtNode.elseStmt != null && !checkStmtReturnType(type, ifStmtNode.elseStmt))
+                return false;
+            return true;
+        }
+        if (stmt instanceof ForStmtNode) {
+            ForStmtNode forStmtNode = (ForStmtNode) stmt;
+            return checkStmtReturnType(type, forStmtNode.stmt);
+        }
+        if (stmt instanceof WhileStmtNode) {
+            WhileStmtNode whileStmt = (WhileStmtNode) stmt;
+            return checkStmtReturnType(type, whileStmt.stmt);
+        }
+
+        return false;
     }
 }

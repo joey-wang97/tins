@@ -1,5 +1,6 @@
 package wang.joye.tins.ast.node;
 
+import wang.joye.tins.ASTVisitor;
 import wang.joye.tins.ast.stmt.CompoundStmtNode;
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.DumpUtil;
@@ -28,5 +29,10 @@ public class FuncDefNode extends Node {
         paramNode.forEach(i -> i.dump(level + 1));
         DumpUtil.dump(level, "func stmts:");
         bodyStmt.stmts.forEach(i -> i.dump(level + 1));
+    }
+
+    @Override
+    public void visit(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }
