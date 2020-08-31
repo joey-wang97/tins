@@ -3,6 +3,7 @@ package wang.joye.tins.ast.stmt;
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.ast.node.StmtNode;
 import wang.joye.tins.util.DumpUtil;
+import wang.joye.tins.visitor.ASTVisitor;
 
 /**
  * 顶层结点
@@ -19,5 +20,10 @@ public class WhileStmtNode extends StmtNode {
         condition.dump(level + 2);
         DumpUtil.dump(level + 1, "stmt");
         stmt.dump(level + 2);
+    }
+
+    @Override
+    public void check(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -92,8 +92,10 @@ prefixUnaryExpr = '~' prefixUnaryExpr
                 | '++' factorExpr
                 | '--' factorExpr
                 | '-' factorExpr
-                | '(' TYPE ')' prefixUnaryExpr
+                | castExpr
                 | factorExpr
+
+castExpr = '(' TYPE ')' prefixUnaryExpr
 
 factorExpr = factorExpr '.' factorExpr
            | factorExpr '[' expr ']'

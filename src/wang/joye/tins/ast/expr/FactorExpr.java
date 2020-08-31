@@ -2,6 +2,7 @@ package wang.joye.tins.ast.expr;
 
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.util.DumpUtil;
+import wang.joye.tins.visitor.ASTVisitor;
 
 import java.util.List;
 
@@ -35,5 +36,10 @@ public class FactorExpr extends ExprNode {
             DumpUtil.dump(level+1, "nextFactor");
             nextFactor.dump(level + 2);
         }
+    }
+
+    @Override
+    public void check(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }

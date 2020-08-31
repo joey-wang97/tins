@@ -2,6 +2,7 @@ package wang.joye.tins.ast.node;
 
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.DumpUtil;
+import wang.joye.tins.visitor.ASTVisitor;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -42,5 +43,10 @@ public class VarDefNode extends Node {
         }
         if (value != null)
             value.dump(level + 1);
+    }
+
+    @Override
+    public void visit(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }

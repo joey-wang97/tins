@@ -3,6 +3,7 @@ package wang.joye.tins.ast.expr;
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.DumpUtil;
+import wang.joye.tins.visitor.ASTVisitor;
 
 public class RelationExpr extends ExprNode {
     public ExprNode leftExpr, rightExpr;
@@ -21,5 +22,10 @@ public class RelationExpr extends ExprNode {
         leftExpr.dump(level+1);
         DumpUtil.dump(level, "right Expr");
         rightExpr.dump(level+1);
+    }
+
+    @Override
+    public void check(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }

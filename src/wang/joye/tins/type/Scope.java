@@ -20,4 +20,14 @@ public class Scope {
         });
         varList.add(varNode);
     }
+
+    public VarDefNode get(String varName) {
+        for (VarDefNode varDefNode : varList) {
+            if (varDefNode.varNameToken.name.equals(varName))
+                return varDefNode;
+        }
+        if (parent != null)
+            return parent.get(varName);
+        return null;
+    }
 }

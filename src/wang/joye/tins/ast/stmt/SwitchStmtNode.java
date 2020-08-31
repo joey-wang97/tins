@@ -3,6 +3,7 @@ package wang.joye.tins.ast.stmt;
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.ast.node.StmtNode;
 import wang.joye.tins.util.DumpUtil;
+import wang.joye.tins.visitor.ASTVisitor;
 
 import java.util.List;
 
@@ -20,4 +21,10 @@ public class SwitchStmtNode extends StmtNode {
         DumpUtil.dump(level);
         System.out.println();
     }
+
+    @Override
+    public void check(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
+
 }

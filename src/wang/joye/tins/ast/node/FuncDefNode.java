@@ -1,10 +1,11 @@
 package wang.joye.tins.ast.node;
 
-import wang.joye.tins.ASTVisitor;
 import wang.joye.tins.ast.stmt.CompoundStmtNode;
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.DumpUtil;
+import wang.joye.tins.visitor.ASTVisitor;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -17,6 +18,7 @@ public class FuncDefNode extends Node {
     // 函数返回类型
     public Token funcTypeToken;
     public Token funcNameToken;
+    public List<ExprNode> eachDimensionLength = new LinkedList<>();
     public List<FuncParamNode> paramNode;
     public CompoundStmtNode bodyStmt;
 

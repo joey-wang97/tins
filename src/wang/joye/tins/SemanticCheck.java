@@ -1,35 +1,37 @@
 package wang.joye.tins;
 
 import wang.joye.tins.ast.AST;
-import wang.joye.tins.ast.expr.ArrExpr;
-import wang.joye.tins.ast.expr.StructAssignExpr;
+import wang.joye.tins.ast.expr.*;
 import wang.joye.tins.ast.node.*;
 import wang.joye.tins.ast.stmt.*;
+import wang.joye.tins.type.ExprType;
 import wang.joye.tins.type.Scope;
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.ErrorUtil;
+import wang.joye.tins.visitor.ASTVisitor;
+import wang.joye.tins.visitor.ExprTypeVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SemanticCheck {
+public class SemanticCheck implements ASTVisitor {
 
     public static AST globalAst = null;
 
     // 所有struct的名字
     private static List<String> structNames = new ArrayList<>();
-    private static Scope topScope = new Scope();
+    public static Scope currScope = new Scope();
 
-    public static void check(AST ast) {
+    public void check(AST ast) {
         // 保存ast，结构体检查时需要获取其中的struct定义
         globalAst = ast;
-        // TODO check import
+        ast.importNodes.forEach(this::visit);
         checkStructDef(ast.structDefNodes);
         checkVarDefs(ast.varDefNodes);
         checkFuncDefs(ast.funcDefNodes);
     }
 
-    private static void checkStructDef(List<StructDefNode> structDefs) {
+    private void checkStructDef(List<StructDefNode> structDefs) {
         // 检查结构体是否同名
         for (StructDefNode structDef : structDefs) {
             if (structNames.contains(structDef.nameToken.name)) {
@@ -40,7 +42,9 @@ public class SemanticCheck {
         }
     }
 
-    private static void checkVarDefs(List<VarDefNode> varDefs) {
+    private void checkVarDefs(List<VarDefNode> varDefs) {
+        // 保存变量到作用域中
+        currScope.varList = varDefs;
         List<String> varNames = new ArrayList<>(varDefs.size());
         // 检查是否存在同名变量
         for (VarDefNode var : varDefs) {
@@ -48,22 +52,22 @@ public class SemanticCheck {
                 ErrorUtil.error(var.varNameToken.line, "duplicated var define: " + var.varNameToken.name);
             }
             varNames.add(var.varNameToken.name);
-            checkVarDef(var);
+            visit(var);
         }
     }
 
-    private static void checkFuncDefs(List<FuncDefNode> funDefs) {
+    private void checkFuncDefs(List<FuncDefNode> funDefs) {
         List<FuncDefNode> list = new ArrayList<>();
         // 检查函数是否合法（函数名一样时，可重载，不可覆盖）
         for (int i = 0; i < funDefs.size(); i++) {
             for (int j = i + 1; j < funDefs.size(); j++) {
                 checkSameFunc(funDefs.get(i), funDefs.get(j));
             }
-            checkFuncDef(funDefs.get(i));
+            visit(funDefs.get(i));
         }
     }
 
-    private static void checkSameFunc(FuncDefNode func1, FuncDefNode func2) {
+    private void checkSameFunc(FuncDefNode func1, FuncDefNode func2) {
         // 函数名不同
         if (!func1.funcNameToken.name.equals(func2.funcNameToken.name))
             return;
@@ -94,7 +98,8 @@ public class SemanticCheck {
         ErrorUtil.error(func2.funcNameToken.line, "duplicated func define: " + func2.funcNameToken.name);
     }
 
-    private static void checkVarDef(VarDefNode varDef) {
+    @Override
+    public void visit(VarDefNode varDef) {
         // 如果变量为数组
         if (varDef.eachDimensionLength.size() > 0) {
             checkArrDef(varDef);
@@ -104,10 +109,11 @@ public class SemanticCheck {
             checkStructDef(varDef);
         }
         // 检查左值和右值是否匹配
-        ExprUtil.checkMatch(varDef.varTypeToken, varDef.value);
+        checkMatch(varDef.varTypeToken, varDef.value, varDef.eachDimensionLength.size() > 0);
     }
 
-    private static void checkArrDef(VarDefNode varDef) {
+
+    private void checkArrDef(VarDefNode varDef) {
         // 如果数组未初始化赋值，必须初始化维度
         if (varDef.value == null) {
             for (int i = 0; i < varDef.eachDimensionLength.size(); i++) {
@@ -135,11 +141,11 @@ public class SemanticCheck {
 
         // 检查数组中每个元素，类型是否正确
         for (ExprNode arrElement : arrExpr.exprs) {
-            ExprUtil.checkMatch(varDef.varTypeToken, arrElement);
+            checkMatch(varDef.varTypeToken, arrElement, varDef.eachDimensionLength.size() > 0);
         }
     }
 
-    private static void checkStructDef(VarDefNode varDef) {
+    private void checkStructDef(VarDefNode varDef) {
         if (!(varDef.value instanceof StructAssignExpr)) {
             ErrorUtil.error(varDef.varNameToken.line, varDef.value.getClass() + "cannot assign to " + varDef.varTypeToken.name);
         }
@@ -165,12 +171,12 @@ public class SemanticCheck {
         for (StructAssignExpr.ObjectField fieldValue : structAssignExpr.fieldValues) {
             // 检查是否具有属性名
             if (fieldValue.nameToken == null) {
-                ErrorUtil.error(ExprUtil.getLine(fieldValue.expr), "you must specified field name in " + varDef.varNameToken.value);
+                ErrorUtil.error(fieldValue.expr.getLine(), "you must specified field name in " + varDef.varNameToken.value);
             }
             VarDefNode fieldDef = structDef.getFieldDef(fieldValue.nameToken.name);
 
             // 检查属性定义和属性表达式，是否匹配
-            ExprUtil.checkMatch(fieldDef.varTypeToken, fieldValue.expr);
+            checkMatch(fieldDef.varTypeToken, fieldValue.expr, fieldDef.eachDimensionLength.size() > 0);
         }
     }
 
@@ -178,9 +184,10 @@ public class SemanticCheck {
      * 检查函数定义是否合法
      * 此处不需要检查函数重复定义的问题，在之前已经检查过
      */
-    private static void checkFuncDef(FuncDefNode funcDef) {
+    @Override
+    public void visit(FuncDefNode funcDef) {
         // 检查函数语句是否合法
-        SemanticCheck.checkCompoundStmt(funcDef.bodyStmt);
+        visit(funcDef.bodyStmt);
 
         // 检查return语句和函数返回类型是否一致
         if (funcDef.funcTypeToken.type != Token.Type.VOID) {
@@ -188,19 +195,10 @@ public class SemanticCheck {
                 ErrorUtil.error(funcDef.funcTypeToken.line, "func " + funcDef.funcNameToken.name + " must contain return stmt");
             }
             // 检查函数体的return语句
-            if (!checkStmtReturnType(funcDef.funcTypeToken, funcDef.bodyStmt)) {
+            if (!checkStmtReturnType(funcDef.funcTypeToken, funcDef.bodyStmt, funcDef.eachDimensionLength.size() > 0)) {
                 ErrorUtil.error(funcDef.funcTypeToken.line, "func " + funcDef.funcNameToken.name + " must contain return stmt");
             }
         }
-    }
-
-    private static void checkCompoundStmt(CompoundStmtNode compoundStmt) {
-        // TODO 是使用visitor模式？还是?
-    }
-
-
-    private static void checkExpr(ExprNode expr) {
-
     }
 
     /**
@@ -213,9 +211,9 @@ public class SemanticCheck {
      * </pre>
      * 先检查是否为return，再检查return的类型是否与期望类型一致.
      */
-    private static boolean checkStmtReturnType(Token type, StmtNode stmt) {
+    private static boolean checkStmtReturnType(Token type, StmtNode stmt, boolean isArr) {
         if (stmt instanceof ReturnStmtNode) {
-            ExprUtil.checkMatch(type, ((ReturnStmtNode) stmt).expr);
+            checkMatch(type, ((ReturnStmtNode) stmt).expr, isArr);
         }
         if (stmt instanceof CompoundStmtNode) {
             // 取出函数体的最后一条语句
@@ -224,29 +222,330 @@ public class SemanticCheck {
                 return false;
             }
             StmtNode lastStmt = compoundStmt.stmts.get(compoundStmt.stmts.size() - 1);
-            return checkStmtReturnType(type, lastStmt);
+            return checkStmtReturnType(type, lastStmt, isArr);
         }
         if (stmt instanceof IfStmtNode) {
             IfStmtNode ifStmtNode = (IfStmtNode) stmt;
-            if (!checkStmtReturnType(type, ifStmtNode.ifStmt))
+            if (!checkStmtReturnType(type, ifStmtNode.ifStmt, isArr))
                 return false;
             for (IfStmtNode.ElseIfStmt elseIfStmt : ifStmtNode.elseIfStmts) {
-                if (!checkStmtReturnType(type, elseIfStmt.stmt))
+                if (!checkStmtReturnType(type, elseIfStmt.stmt, isArr))
                     return false;
             }
-            if (ifStmtNode.elseStmt != null && !checkStmtReturnType(type, ifStmtNode.elseStmt))
+            if (ifStmtNode.elseStmt != null && !checkStmtReturnType(type, ifStmtNode.elseStmt, isArr))
                 return false;
             return true;
         }
         if (stmt instanceof ForStmtNode) {
             ForStmtNode forStmtNode = (ForStmtNode) stmt;
-            return checkStmtReturnType(type, forStmtNode.stmt);
+            return checkStmtReturnType(type, forStmtNode.stmt, isArr);
         }
         if (stmt instanceof WhileStmtNode) {
             WhileStmtNode whileStmt = (WhileStmtNode) stmt;
-            return checkStmtReturnType(type, whileStmt.stmt);
+            return checkStmtReturnType(type, whileStmt.stmt, isArr);
         }
 
         return false;
     }
+
+    @Override
+    public void visit(ArrExpr expr) {
+        ExprType firstType = expr.exprs.get(0).type();
+        for (int i = 1; i < expr.exprs.size(); i++) {
+            ExprType curType = expr.exprs.get(i).type();
+            if (!sameExprType(firstType, curType))
+                ErrorUtil.error(expr.getLine(), "arr expr type mismatch");
+        }
+    }
+
+    /**
+     * 二元表达式检查
+     */
+    private void binaryCheck(ExprNode left, ExprNode right) {
+        // 左值是否和右值匹配
+        ExprType leftType = ExprTypeVisitor.getType(left);
+        ExprType rightType = ExprTypeVisitor.getType(right);
+        if (!sameExprType(leftType, rightType)) {
+            ErrorUtil.error(left.getLine(), "assign expr type mismatch");
+        }
+        left.visit(this);
+        right.visit(this);
+    }
+
+    /**
+     * 一个表达式必须为整型：int或long
+     */
+    private void mustBeInteger(ExprNode expr) {
+        if (expr.type().type != ExprType.Type.INT
+                && expr.type().type != ExprType.Type.LONG) {
+            ErrorUtil.error(expr.getLine(), "expr type must be int");
+        }
+    }
+
+    /**
+     * 必须为基本类型: int/long/float/double
+     */
+    private void mustBeSimpleType(ExprNode expr) {
+        if (expr.type().arrDimension > 0
+                || expr.type().type == ExprType.Type.STRUCT
+                || expr.type().type != ExprType.Type.STRING) {
+            ErrorUtil.error(expr.getLine(), "expr type must not be string or struct");
+        }
+    }
+
+    @Override
+    public void visit(AssignExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+    }
+
+    @Override
+    public void visit(BitAndExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+        mustBeInteger(expr.leftExpr);
+        mustBeInteger(expr.rightExpr);
+    }
+
+    @Override
+    public void visit(BitOrExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+        mustBeInteger(expr.leftExpr);
+        mustBeInteger(expr.rightExpr);
+    }
+
+    @Override
+    public void visit(BitXorExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+        mustBeInteger(expr.leftExpr);
+        mustBeInteger(expr.rightExpr);
+    }
+
+    @Override
+    public void visit(CastExpr castExpr) {
+        // 不可强转为string或struct
+        if (castExpr.castType.type == Token.Type.IDENTIFIER
+                || castExpr.castType.type == Token.Type.STRING) {
+            ErrorUtil.error(castExpr.getLine(), "can't cast to struct or string");
+        }
+    }
+
+    @Override
+    public void visit(CondExpr expr) {
+
+    }
+
+    @Override
+    public void visit(AddOrSubExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+        mustBeSimpleType(expr.leftExpr);
+        mustBeSimpleType(expr.rightExpr);
+    }
+
+    @Override
+    public void visit(EqualityExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+    }
+
+    @Override
+    public void visit(FactorExpr expr) {
+
+    }
+
+    @Override
+    public void visit(LogicAndExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+        mustBeInteger(expr.leftExpr);
+        mustBeInteger(expr.rightExpr);
+    }
+
+    @Override
+    public void visit(LogicOrExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+        mustBeInteger(expr.leftExpr);
+        mustBeInteger(expr.rightExpr);
+    }
+
+    @Override
+    public void visit(MulOrDivExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+        mustBeSimpleType(expr.leftExpr);
+        mustBeSimpleType(expr.rightExpr);
+    }
+
+    @Override
+    public void visit(ParenthesisExpr expr) {
+
+    }
+
+    @Override
+    public void visit(PrefixUnaryExpr prefixUnaryExpr) {
+        mustBeSimpleType(prefixUnaryExpr.expr);
+    }
+
+    @Override
+    public void visit(PrimaryExpr expr) {
+
+    }
+
+    @Override
+    public void visit(RelationExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+    }
+
+    @Override
+    public void visit(ShiftExpr expr) {
+        binaryCheck(expr.leftExpr, expr.rightExpr);
+        mustBeSimpleType(expr.leftExpr);
+        mustBeSimpleType(expr.rightExpr);
+    }
+
+    @Override
+    public void visit(StructAssignExpr expr) {
+
+    }
+
+    @Override
+    public void visit(SuffixUnaryExpr expr) {
+        mustBeSimpleType(expr.expr);
+    }
+
+    @Override
+    public void visit(BreakStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(CaseStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(CompoundStmtNode compoundStmt) {
+// 进入复合语句，添加新一级作用域
+        Scope tempScope = new Scope();
+        tempScope.parent = currScope;
+        currScope = tempScope;
+        for (StmtNode stmt : compoundStmt.stmts) {
+            stmt.visit(this);
+        }
+    }
+
+    @Override
+    public void visit(ContinueStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(EmptyStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(ExprStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(ForStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(IfStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(ReturnStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(SwitchStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(VarDefStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(WhileStmtNode stmt) {
+
+    }
+
+    @Override
+    public void visit(ImportNode importNode) {
+
+    }
+
+    @Override
+    public void visit(StructDefNode structDefNode) {
+
+    }
+
+    @Override
+    public void visit(FuncParamNode funcParamNode) {
+
+    }
+
+    /**
+     * 检查token和expr的类型是否一致
+     * 暂不支持隐式转换
+     * TODO 暂时只支持一维数组
+     */
+    public static void checkMatch(Token token, ExprNode exprNode, boolean isArr) {
+        ExprType exprType = exprNode.type();
+        switch (exprType.type) {
+            case INT:
+                if (token.type != Token.Type.INT)
+                    ErrorUtil.error(token.line, "type mismatch");
+                break;
+            case CHAR:
+                if (token.type != Token.Type.CHAR)
+                    ErrorUtil.error(token.line, "type mismatch");
+                break;
+            case LONG:
+                ErrorUtil.error(token.line, "unexpected long type!");
+                break;
+            case FLOAT:
+                if (token.type != Token.Type.FLOAT)
+                    ErrorUtil.error(token.line, "type mismatch");
+                break;
+            case DOUBLE:
+                if (token.type != Token.Type.DOUBLE)
+                    ErrorUtil.error(token.line, "type mismatch");
+                break;
+            case STRING:
+                if (token.type != Token.Type.STRING)
+                    ErrorUtil.error(token.line, "type mismatch");
+                break;
+            case STRUCT:
+                if (token.type != Token.Type.IDENTIFIER
+                        && !exprType.name.equals(token.name))
+                    ErrorUtil.error(token.line, "type mismatch");
+                break;
+        }
+        // 判断两个是不是都是数组类型，或者都不是，所以用异或
+        if (isArr ^ exprNode.type().arrDimension > 0) {
+            ErrorUtil.error(token.line, "arr type mismatch");
+        }
+    }
+
+    /**
+     * 判断两个表达式类型 是否同一类型
+     * 暂不考虑隐式转换，隐式转换需要考虑是左转右还是右转左还是都ok
+     */
+    public static boolean sameExprType(ExprType type1, ExprType type2) {
+        // 如果都是基本类型
+        if (type1.type == type2.type && type1.type != ExprType.Type.STRUCT)
+            return true;
+        // 如果是同一结构体类型
+        if (type1.type == ExprType.Type.STRUCT
+                && type2.type == ExprType.Type.STRUCT
+                && type1.name.equals(type2.name))
+            return true;
+        return false;
+    }
+
 }

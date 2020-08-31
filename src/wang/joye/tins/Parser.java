@@ -112,6 +112,16 @@ public class Parser {
         if (!isVarType(funcType) && funcType.type != Token.Type.VOID)
             lexer.error(funcType, "func type can't be " + funcType.name);
         funcDefNode.funcTypeToken = funcType;
+        while (lexer.peek().type == Token.Type.L_SQUARE_BRACKET) {
+            lexer.next();
+            // 数组维数可能为空
+            if (lexer.peek().type == Token.Type.R_SQUARE_BRACKET) {
+                funcDefNode.eachDimensionLength.add(null);
+            } else {
+                funcDefNode.eachDimensionLength.add(expr());
+            }
+            lexer.match(Token.Type.R_SQUARE_BRACKET);
+        }
         funcDefNode.funcNameToken = lexer.match(Token.Type.IDENTIFIER);
         if (funcDefNode.funcNameToken.equals("main")) {
             // TODO main func
@@ -523,11 +533,11 @@ public class Parser {
         Token.Type labelType = lexer.peek().type;
         // 取反，取非，都是可递归的
         if (labelType == Token.Type.BIT_REVERSE || labelType == Token.Type.NOT) {
-            return new PrefixUnaryExpr(lexer.next().type, prefixUnaryExpr());
+            return new PrefixUnaryExpr(lexer.next(), prefixUnaryExpr());
         } else if (labelType == Token.Type.INC // 这些操作符不可递归
                 || labelType == Token.Type.DEC
                 || labelType == Token.Type.SUB) {
-            return new PrefixUnaryExpr(lexer.next().type, factorExpr());
+            return new PrefixUnaryExpr(lexer.next(), factorExpr());
         } else if (labelType == Token.Type.OPEN_PARENTHESIS) {
             // 类型转换表达式
             Token token = lexer.lookAhead(1);

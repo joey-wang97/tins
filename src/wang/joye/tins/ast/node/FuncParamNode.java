@@ -1,8 +1,8 @@
 package wang.joye.tins.ast.node;
 
-import wang.joye.tins.ASTVisitor;
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.DumpUtil;
+import wang.joye.tins.visitor.ASTVisitor;
 
 /**
  * 函数参数节点

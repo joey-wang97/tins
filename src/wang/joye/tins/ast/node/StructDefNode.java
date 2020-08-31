@@ -2,6 +2,7 @@ package wang.joye.tins.ast.node;
 
 import wang.joye.tins.type.Token;
 import wang.joye.tins.util.DumpUtil;
+import wang.joye.tins.visitor.ASTVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,5 +28,10 @@ public class StructDefNode extends Node {
         DumpUtil.dump(level, "struct fields:");
         fieldDefs.forEach(i -> i.dump(level + 1));
         System.out.println();
+    }
+
+    @Override
+    public void visit(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }

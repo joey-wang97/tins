@@ -3,6 +3,7 @@ package wang.joye.tins.ast.stmt;
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.ast.node.StmtNode;
 import wang.joye.tins.util.DumpUtil;
+import wang.joye.tins.visitor.ASTVisitor;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -41,5 +42,10 @@ public class IfStmtNode extends StmtNode {
             DumpUtil.dump(level + 1, "else stmt:");
             elseStmt.dump(level + 2);
         }
+    }
+
+    @Override
+    public void check(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }
