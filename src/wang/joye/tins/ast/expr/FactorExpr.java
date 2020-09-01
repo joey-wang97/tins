@@ -1,8 +1,11 @@
 package wang.joye.tins.ast.expr;
 
 import wang.joye.tins.ast.node.ExprNode;
+import wang.joye.tins.type.ExprType;
 import wang.joye.tins.util.DumpUtil;
 import wang.joye.tins.visitor.ASTVisitor;
+import wang.joye.tins.visitor.ExprLineVisitor;
+import wang.joye.tins.visitor.ExprTypeVisitor;
 
 import java.util.List;
 
@@ -25,6 +28,11 @@ public class FactorExpr extends ExprNode {
     }
 
     @Override
+    public void visit(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
     public void dump(int level) {
         DumpUtil.dump(level, "factorExpr");
         expr.dump(level + 1);
@@ -39,7 +47,12 @@ public class FactorExpr extends ExprNode {
     }
 
     @Override
-    public void check(ASTVisitor visitor) {
-        visitor.visit(this);
+    public ExprType type() {
+        return ExprTypeVisitor.getType(this);
+    }
+
+    @Override
+    public int getLine() {
+        return ExprLineVisitor.getLine(this);
     }
 }
