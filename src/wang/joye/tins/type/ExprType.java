@@ -9,7 +9,7 @@ import wang.joye.tins.util.ErrorUtil;
  */
 public class ExprType {
     public Type type;
-    public String name;
+    public String structName;
     // 数组维度
     public int arrDimension;
 
@@ -21,7 +21,7 @@ public class ExprType {
     }
 
     public String getTypeName() {
-        return name == null ? type.name() : name;
+        return structName == null ? type.name() : structName;
     }
 
     public static ExprType convert2ExprType(Token token) {
@@ -43,7 +43,7 @@ public class ExprType {
             }
             if (varDef.varTypeToken.type == Token.Type.STRUCT) {
                 ExprType type = new ExprType(Type.STRUCT);
-                type.name = token.name;
+                type.structName = token.name;
                 return type;
             }
             ErrorUtil.error("symbol " + token.name + " can't convert to ExprType");

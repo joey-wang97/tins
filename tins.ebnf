@@ -97,18 +97,26 @@ prefixUnaryExpr = '~' prefixUnaryExpr
 
 castExpr = '(' TYPE ')' prefixUnaryExpr
 
-factorExpr = factorExpr '.' factorExpr
-           | factorExpr '[' expr ']'
+#TODO 从这里开始重写
+factorExpr = fieldAccessExpr
+           | arrayAccessExpr
            | callFuncExpr
-           | ID
            | primary
-           | '(' expr ')'
+
+fieldAccessExpr = factorExpr '.' ID
+
+arrayAccessExpr = factorExpr '[' expr ']'
+
+callFuncExpr = factorExpr '(' param ')'
 
 (* 不可分割，不可链式操作 *)
-primary = NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL
-            | arrExpr | structExpr
+primary = ID
+        | arrExpr
+        | structExpr
+        | '(' expr ')'
+        | literal
 
-callFuncExpr = ID '(' param ')'
+literal = NUM_VAL | STRING_VAL | CHAR_VAL | DOUBLE_VAL | FLOAT_VAL
 
 arrExpr = '[' (expr ',')* ']'
 structExpr = '{' (ID ':' expr ',')* '}'

@@ -330,7 +330,7 @@ public class SemanticCheck implements ASTVisitor {
 
     @Override
     public void visit(CondExpr expr) {
-
+        // TODO
     }
 
     @Override
@@ -347,7 +347,7 @@ public class SemanticCheck implements ASTVisitor {
 
     @Override
     public void visit(FactorExpr expr) {
-
+        // TODO check
     }
 
     @Override
@@ -522,7 +522,7 @@ public class SemanticCheck implements ASTVisitor {
                 break;
             case STRUCT:
                 if (token.type != Token.Type.IDENTIFIER
-                        && !exprType.name.equals(token.name))
+                        && !exprType.structName.equals(token.name))
                     ErrorUtil.error(token.line, "type mismatch");
                 break;
         }
@@ -543,7 +543,7 @@ public class SemanticCheck implements ASTVisitor {
         // 如果是同一结构体类型
         if (type1.type == ExprType.Type.STRUCT
                 && type2.type == ExprType.Type.STRUCT
-                && type1.name.equals(type2.name))
+                && type1.structName.equals(type2.structName))
             return true;
         return false;
     }

@@ -1,7 +1,10 @@
 package wang.joye.tins.visitor;
 
+import wang.joye.tins.SemanticCheck;
 import wang.joye.tins.ast.expr.*;
 import wang.joye.tins.ast.node.ExprNode;
+import wang.joye.tins.ast.node.StructDefNode;
+import wang.joye.tins.ast.node.VarDefNode;
 import wang.joye.tins.type.ExprType;
 import wang.joye.tins.util.ErrorUtil;
 
@@ -51,8 +54,55 @@ public class ExprTypeVisitor {
     }
 
     public static ExprType getType(FactorExpr expr) {
-        // TODO factorExpr type
-        // return expr.leftExpr.type();
+        ExprType exprType = expr.expr.type();
+        // 如果有表达式：a.b.c
+        // 则先取出a的类型，根据a的类型，得到属性b的类型
+        // 根据a.b的类型，得到属性c的类型
+        // 这里默认语义是正确的，正确性由SemanticCheck保证
+        while (expr.nextFactor != null) {
+            StructDefNode def = null;
+            // 先找到结构体定义
+            // a.b.c，先找a的定义
+            for (StructDefNode structDef : SemanticCheck.globalAst.structDefNodes) {
+                if (structDef.nameToken.name.equals(exprType.structName)) {
+                    def = structDef;
+                    break;
+                }
+            }
+            // 这里必须用expr.nextFactor.expr，不能用expr.nextFactor.type()
+            // 对于a.b.c来说，接下来计算的是b的type, 而不是b.c的type
+            ExprType nextType = expr.nextFactor.expr.type();
+            for (VarDefNode fieldDef : def.fieldDefs) {
+                if (fieldDef.varNameToken.name.equals(nextType.structName)) {
+
+                }
+            }
+
+            // 求a.b.c -> 求b.c
+            expr = expr.nextFactor;
+        }
+
+        // 如果expr取了数组: expr[0][1]，则减去取的维数
+        // int[][][] a;
+        // a[0][0];
+        // 此时exprType为 INT型一维数组
+        if (expr.arrIndexList.size() > 0) {
+            exprType.arrDimension -= expr.arrIndexList.size();
+        }
+        return exprType;
+    }
+
+    public static ExprType getType(ExprType prefixType, FactorExpr factorExpr) {
+        StructDefNode def;
+        // 先找到结构体定义
+        // a.b.c，先找a的定义
+        for (StructDefNode structDef : SemanticCheck.globalAst.structDefNodes) {
+            if (structDef.nameToken.name.equals(prefixType.structName)) {
+                def = structDef;
+                break;
+            }
+        }
+
     }
 
     void visit(FactorExpr expr);
