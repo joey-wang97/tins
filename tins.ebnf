@@ -1,6 +1,20 @@
-program = importStmt | varDef | structDef | funcDef
+program = packageDecl ? importStmt * unitDecl *
 
-importStmt = IMPORT ID '.' ID '.' ID
+packageDecl = PACKAGE (ID .) * ID
+importStmt = IMPORT (ID .) * ID
+unitDecl = structDecl | funcDecl | varDecl
+
+structDecl = STRUCT { varDecl * }
+
+funcDecl = funcHead funcBody
+funcHead = FUNC funcType ID '(' funcParam ')'
+funcBody = { stmt * }
+
+// TODO
+varDecl
+
+baseType = INT | LONG | CHAR | FLOAT | DOUBLE
+funcType = baseType | VOID
 
 varDef = TYPE ID '=' expr | arrDef
 arrDef = TYPE[expr][expr] ID '=' arrExpr
