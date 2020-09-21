@@ -1,38 +1,37 @@
-program = packageDecl ? importStmt * unitDecl *
+program = packageDef ? importStmt * unitDef *
 
-packageDecl = PACKAGE (ID .) * ID
+packageDef = PACKAGE (ID .) * ID
 importStmt = IMPORT (ID .) * ID
-unitDecl = structDecl | funcDecl | varDecl
+unitDef = structDef | funcDef | varDefs
 
-structDecl = STRUCT { varDecl * }
+structDef = STRUCT ID { varDef * }
 
-funcDecl = funcHead funcBody
-funcHead = FUNC funcType ID '(' funcParam ')'
+funcDef = funcHead funcBody
+funcHead = FUNC funcType ID '(' funcParam? ')'
 funcBody = { stmt * }
+funcParam = varType ID (, varType ID) *
 
-// TODO
-varDecl
+varDefs = varType varDef (, varDef ) *
+varDef = ID ( = expr) ?
 
-baseType = INT | LONG | CHAR | FLOAT | DOUBLE
+varType = baseType | structType ([ expr ]) *
 funcType = baseType | VOID
+baseType = INT | LONG | CHAR | FLOAT | DOUBLE
+structType = ID
 
-varDef = TYPE ID '=' expr | arrDef
-arrDef = TYPE[expr][expr] ID '=' arrExpr
-
-structDef = STRUCT ID '{' varDef '}'
-
-funcDef = TYPE ID funcParam compoundStmt
-
-funcParam = '(' TYPE ID, TYPE ...ID ')'
-
-stmt = ifStmt
+stmt = varDefs
+     | ifStmt
      | whileStmt
      | forStmt
      | breakStmt
      | continueStmt
      | returnStmt
-     | expr
+     | exprStmt
      | compoundStmt
+
+ifStmt = IF '(' expr ')' stmt
+         (ELSE IF '(' expr ')' stmt) *
+         (ELSE stmt) ?
 
 compoundStmt = { stmt }
 
