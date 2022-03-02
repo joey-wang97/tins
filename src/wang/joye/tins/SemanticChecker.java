@@ -14,12 +14,14 @@ import wang.joye.tins.visitor.ExprTypeVisitor;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SemanticCheck implements ASTVisitor {
+public class SemanticChecker implements ASTVisitor {
 
     public static AST globalAst = null;
 
-    // 所有struct的名字
-    private static final List<String> structNames = new ArrayList<>();
+    /**
+     * 所有struct的名字
+     */
+    private static final List<String> STRUCT_NAMES = new ArrayList<>();
     public static Scope currScope = new Scope();
 
     public void check(AST ast) {
@@ -34,10 +36,10 @@ public class SemanticCheck implements ASTVisitor {
     private void checkStructDef(List<StructDefNode> structDefs) {
         // 检查结构体是否同名
         for (StructDefNode structDef : structDefs) {
-            if (structNames.contains(structDef.nameToken.name)) {
+            if (STRUCT_NAMES.contains(structDef.nameToken.name)) {
                 ErrorUtil.error(structDef.nameToken.line, "duplicated struct name: " + structDef.nameToken.name);
             }
-            structNames.add(structDef.nameToken.name);
+            STRUCT_NAMES.add(structDef.nameToken.name);
             checkVarDefs(structDef.fieldDefs);
         }
     }
@@ -111,7 +113,6 @@ public class SemanticCheck implements ASTVisitor {
         // 检查左值和右值是否匹配
         checkMatch(varDef.varTypeToken, varDef.value, varDef.eachDimensionLength.size() > 0);
     }
-
 
     private void checkArrDef(VarDefNode varDef) {
         // 如果数组未初始化赋值，必须初始化维度
@@ -251,7 +252,7 @@ public class SemanticCheck implements ASTVisitor {
         ExprType firstType = expr.exprs.get(0).getType();
         for (int i = 1; i < expr.exprs.size(); i++) {
             ExprType curType = expr.exprs.get(i).getType();
-            if (!sameExprType(firstType, curType))
+            if (differentExprType(firstType, curType))
                 ErrorUtil.error(expr.getLine(), "arr expr type mismatch");
         }
     }
@@ -263,7 +264,7 @@ public class SemanticCheck implements ASTVisitor {
         // 左值是否和右值匹配
         ExprType leftType = ExprTypeVisitor.getType(left);
         ExprType rightType = ExprTypeVisitor.getType(right);
-        if (!sameExprType(leftType, rightType)) {
+        if (differentExprType(leftType, rightType)) {
             ErrorUtil.error(left.getLine(), "assign expr type mismatch");
         }
         left.check(this);
@@ -418,7 +419,7 @@ public class SemanticCheck implements ASTVisitor {
 
     @Override
     public void visit(CompoundStmtNode compoundStmt) {
-// 进入复合语句，添加新一级作用域
+        // 进入复合语句，添加新一级作用域
         Scope tempScope = new Scope();
         tempScope.parent = currScope;
         currScope = tempScope;
@@ -496,32 +497,41 @@ public class SemanticCheck implements ASTVisitor {
         ExprType exprType = exprNode.getType();
         switch (exprType.type) {
             case INT:
-                if (token.type != Token.Type.INT)
+                if (token.type != Token.Type.INT) {
                     ErrorUtil.error(token.line, "type mismatch");
+                }
                 break;
             case CHAR:
-                if (token.type != Token.Type.CHAR)
+                if (token.type != Token.Type.CHAR) {
                     ErrorUtil.error(token.line, "type mismatch");
+                }
                 break;
             case LONG:
                 ErrorUtil.error(token.line, "unexpected long type!");
                 break;
             case FLOAT:
-                if (token.type != Token.Type.FLOAT)
+                if (token.type != Token.Type.FLOAT) {
                     ErrorUtil.error(token.line, "type mismatch");
+                }
                 break;
             case DOUBLE:
-                if (token.type != Token.Type.DOUBLE)
+                if (token.type != Token.Type.DOUBLE) {
                     ErrorUtil.error(token.line, "type mismatch");
+                }
                 break;
             case STRING:
-                if (token.type != Token.Type.STRING)
+                if (token.type != Token.Type.STRING) {
                     ErrorUtil.error(token.line, "type mismatch");
+                }
                 break;
             case STRUCT:
                 if (token.type != Token.Type.IDENTIFIER
-                        && !exprType.structName.equals(token.name))
+                        && !exprType.structName.equals(token.name)) {
                     ErrorUtil.error(token.line, "type mismatch");
+                }
+                break;
+            default:
+                ErrorUtil.error(exprNode.getLine(), "未知类型:" + exprType.type.name());
                 break;
         }
         // 判断两个是不是都是数组类型，或者都不是，所以用异或
@@ -531,17 +541,18 @@ public class SemanticCheck implements ASTVisitor {
     }
 
     /**
-     * 判断两个表达式类型 是否同一类型
+     * 判断两个表达式类型 是否不同类型
      * 暂不考虑隐式转换，隐式转换需要考虑是左转右还是右转左还是都ok
      */
-    public static boolean sameExprType(ExprType type1, ExprType type2) {
+    public static boolean differentExprType(ExprType type1, ExprType type2) {
         // 如果都是基本类型
-        if (type1.type == type2.type && type1.type != ExprType.Type.STRUCT)
-            return true;
+        if (type1.type == type2.type && type1.type != ExprType.Type.STRUCT) {
+            return false;
+        }
         // 如果是同一结构体类型
-        return type1.type == ExprType.Type.STRUCT
-                && type2.type == ExprType.Type.STRUCT
-                && type1.structName.equals(type2.structName);
+        return type1.type != ExprType.Type.STRUCT
+                || type2.type != ExprType.Type.STRUCT
+                || !type1.structName.equals(type2.structName);
     }
 
 }

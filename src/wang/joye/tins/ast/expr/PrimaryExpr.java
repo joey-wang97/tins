@@ -12,6 +12,6 @@ public class PrimaryExpr extends FactorExpr {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "primary: " + token.type + ", " + token.value);
+        DumpUtil.dump(level, this);
     }
 }

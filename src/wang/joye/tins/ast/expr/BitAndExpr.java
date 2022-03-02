@@ -17,11 +17,7 @@ public class BitAndExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "Bit And Expr");
-        DumpUtil.dump(level + 1, "left Expr");
-        leftExpr.dump(level + 2);
-        DumpUtil.dump(level + 1, "right Expr");
-        rightExpr.dump(level + 2);
+        DumpUtil.dump(level, this);
     }
 
     @Override

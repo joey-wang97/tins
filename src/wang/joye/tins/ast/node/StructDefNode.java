@@ -1,7 +1,6 @@
 package wang.joye.tins.ast.node;
 
 import wang.joye.tins.type.Token;
-import wang.joye.tins.util.DumpUtil;
 import wang.joye.tins.visitor.ASTVisitor;
 
 import java.util.ArrayList;
@@ -20,14 +19,6 @@ public class StructDefNode extends Node {
                 return fieldDef;
         }
         return null;
-    }
-
-    @Override
-    public void dump(int level) {
-        DumpUtil.dump(level, "struct name: " + nameToken);
-        DumpUtil.dump(level, "struct fields:");
-        fieldDefs.forEach(i -> i.dump(level + 1));
-        System.out.println();
     }
 
     @Override

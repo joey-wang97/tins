@@ -18,10 +18,7 @@ public class CastExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "Cast Expr");
-        DumpUtil.dump(level + 1, "case type: " + castType.getTypeName());
-        DumpUtil.dump(level + 1, "expr");
-        expr.dump(level + 2);
+        DumpUtil.dump(level, this);
     }
 
     @Override

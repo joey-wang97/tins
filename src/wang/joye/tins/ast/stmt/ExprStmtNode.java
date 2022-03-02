@@ -18,8 +18,7 @@ public class ExprStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "ExprStmt");
-        expr.dump(level +1);
+        DumpUtil.dump(level, this);
     }
 
     @Override

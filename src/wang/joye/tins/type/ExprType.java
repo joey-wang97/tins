@@ -1,6 +1,6 @@
 package wang.joye.tins.type;
 
-import wang.joye.tins.SemanticCheck;
+import wang.joye.tins.SemanticChecker;
 import wang.joye.tins.ast.node.VarDefNode;
 import wang.joye.tins.util.ErrorUtil;
 
@@ -42,7 +42,7 @@ public class ExprType {
             return new ExprType(Type.FLOAT);
         } else if (token.type == Token.Type.IDENTIFIER) {
             // 检查符号表中是否有符号
-            VarDefNode varDef = SemanticCheck.currScope.get(token.name);
+            VarDefNode varDef = SemanticChecker.currScope.get(token.name);
             if (varDef == null) {
                 ErrorUtil.error("can't find " + token.name + "symbol in table");
             }

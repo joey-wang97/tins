@@ -14,6 +14,6 @@ public class IdentifierExpr extends FactorExpr {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "IdentifierExpr: " + varName);
+        DumpUtil.dump(level,this);
     }
 }

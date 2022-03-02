@@ -18,10 +18,7 @@ public class PrefixUnaryExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "Prefix Unary Expr");
-        DumpUtil.dump(level+1, "operator: "+ operator.type.name());
-        DumpUtil.dump(level+1, "expr");
-        expr.dump(level+2);
+        DumpUtil.dump(level, this);
     }
 
     @Override

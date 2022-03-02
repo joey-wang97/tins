@@ -12,7 +12,6 @@ public class ParenthesisExpr extends FactorExpr {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "ParenthesisExpr");
-        expr.dump(level + 1);
+        DumpUtil.dump(level, this);
     }
 }

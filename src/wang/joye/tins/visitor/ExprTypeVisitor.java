@@ -1,6 +1,6 @@
 package wang.joye.tins.visitor;
 
-import wang.joye.tins.SemanticCheck;
+import wang.joye.tins.SemanticChecker;
 import wang.joye.tins.ast.expr.*;
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.ast.node.StructDefNode;
@@ -63,7 +63,7 @@ public class ExprTypeVisitor {
             StructDefNode def = null;
             // 先找到结构体定义
             // a.b.c，先找a的定义
-            for (StructDefNode structDef : SemanticCheck.globalAst.structDefNodes) {
+            for (StructDefNode structDef : SemanticChecker.globalAst.structDefNodes) {
                 if (structDef.nameToken.name.equals(exprType.structName)) {
                     def = structDef;
                     break;
@@ -96,7 +96,7 @@ public class ExprTypeVisitor {
         StructDefNode def;
         // 先找到结构体定义
         // a.b.c，先找a的定义
-        for (StructDefNode structDef : SemanticCheck.globalAst.structDefNodes) {
+        for (StructDefNode structDef : SemanticChecker.globalAst.structDefNodes) {
             if (structDef.nameToken.name.equals(prefixType.structName)) {
                 def = structDef;
                 break;

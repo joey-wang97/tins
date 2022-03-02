@@ -17,13 +17,7 @@ public class CondExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "Cond Expr");
-        DumpUtil.dump(level + 1, "cond");
-        cond.dump(level + 2);
-        DumpUtil.dump(level + 1, "true expr");
-        trueExpr.dump(level + 2);
-        DumpUtil.dump(level + 1, "false expr");
-        falseExpr.dump(level + 2);
+        DumpUtil.dump(level,this);
     }
 
     @Override

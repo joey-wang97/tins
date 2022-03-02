@@ -17,8 +17,7 @@ public class SuffixUnaryExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "SuffixUnaryExpr: " + operator.name());
-        expr.dump(level + 1);
+        DumpUtil.dump(level, this);
     }
 
     @Override

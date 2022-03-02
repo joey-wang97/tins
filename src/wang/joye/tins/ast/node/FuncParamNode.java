@@ -1,7 +1,6 @@
 package wang.joye.tins.ast.node;
 
 import wang.joye.tins.type.Token;
-import wang.joye.tins.util.DumpUtil;
 import wang.joye.tins.visitor.ASTVisitor;
 
 /**
@@ -18,14 +17,6 @@ public class FuncParamNode extends Node {
      * 可变数组
      */
     public boolean variableArr;
-
-    @Override
-    public void dump(int level) {
-        String paramTypeName = paramTypeToken.name == null ? paramTypeToken.type.name() : paramTypeToken.name;
-        DumpUtil.dump(level, "func param: " + paramTypeName + " " + paramNameToken.name
-                + (dimensionLength > 0 ? "[" + dimensionLength + "]" : ""));
-
-    }
 
     @Override
     public void check(ASTVisitor visitor) {

@@ -11,7 +11,7 @@ public class BreakStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "BREAK");
+        DumpUtil.dump(level, this);
     }
 
     @Override

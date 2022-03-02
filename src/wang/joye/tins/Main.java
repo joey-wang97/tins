@@ -2,6 +2,7 @@ package wang.joye.tins;
 
 import wang.joye.tins.ast.AST;
 import wang.joye.tins.type.Token;
+import wang.joye.tins.util.DumpUtil;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -12,8 +13,8 @@ public class Main {
 
     public static void main(String[] args) {
         String testFile = "sample/simple1.tins";
-        testLexer("sample/lexer.test");
-        // testParser(testFile);
+        // testLexer("sample/lexer.test");
+        testParser(testFile);
         // testPreParser(testFile);
     }
 
@@ -34,7 +35,14 @@ public class Main {
         Parser parser = new Parser(fileName);
         AST ast = parser.parser();
         // writeToFile("test.json", JSON.toJSONString(ast));
-        ast.dump();
+        DumpUtil.dump(ast);
+    }
+
+    public static void testSemanticCheck(String fileName) {
+        Parser parser = new Parser(fileName);
+        AST ast = parser.parser();
+        SemanticChecker checker = new SemanticChecker();
+        checker.check(ast);
     }
 
     public static void writeToFile(String filePath, String content) {

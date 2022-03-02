@@ -27,10 +27,6 @@ public class ArrExpr extends FactorExpr {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "Arr Expr");
-        for (int i = 0; i < exprs.size(); i++) {
-            DumpUtil.dump(level+1, "value["+i+"]");
-            exprs.get(i).dump(level+2);
-        }
+        DumpUtil.dump(level, this);
     }
 }

@@ -1,7 +1,7 @@
-program = packageDef ? importStmt * unitDef *
+program = importStmt * unitDef *
 
-packageDef = PACKAGE (ID .) * ID
 importStmt = IMPORT (ID .) * ID
+(* 单元定义 *)
 unitDef = structDef | funcDef | varDefs
 
 structDef = STRUCT ID { varDef * }

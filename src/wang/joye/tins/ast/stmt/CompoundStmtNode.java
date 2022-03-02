@@ -16,8 +16,7 @@ public class CompoundStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "compound stmts:");
-        stmts.forEach(i->i.dump(level+1));
+        DumpUtil.dump(level, this);
     }
 
     @Override

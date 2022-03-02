@@ -26,22 +26,7 @@ public class IfStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "IfStmtNode:");
-        DumpUtil.dump(level + 1, "condition:");
-        condition.dump(level + 2);
-        DumpUtil.dump(level + 1, "if stmt:");
-        ifStmt.dump(level + 2);
-        elseIfStmts.forEach(i -> {
-            DumpUtil.dump(level + 1, "else if stmt:");
-            DumpUtil.dump(level + 2, "condition:");
-            i.condition.dump(level + 3);
-            DumpUtil.dump(level + 2, "stmt:");
-            i.stmt.dump(level + 3);
-        });
-        if (elseStmt != null) {
-            DumpUtil.dump(level + 1, "else stmt:");
-            elseStmt.dump(level + 2);
-        }
+        DumpUtil.dump(level, this);
     }
 
     @Override

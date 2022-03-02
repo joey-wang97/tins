@@ -34,16 +34,7 @@ public class FactorExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "factorExpr");
-        expr.dump(level + 1);
-        if (arrIndexList != null && arrIndexList.size() > 0) {
-            DumpUtil.dump(level+1, "arrIndexList");
-            arrIndexList.forEach(i -> i.dump(level + 2));
-        }
-        if (nextFactor != null) {
-            DumpUtil.dump(level+1, "nextFactor");
-            nextFactor.dump(level + 2);
-        }
+        DumpUtil.dump(level,this);
     }
 
     @Override

@@ -13,4 +13,6 @@ public abstract class ExprNode extends Node {
     public abstract ExprType getType();
 
     public abstract int getLine();
+
+    public abstract void dump(int level);
 }

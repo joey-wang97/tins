@@ -16,12 +16,7 @@ public class StructAssignExpr extends FactorExpr {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "Struct Assign Expr");
-        for (int i = 0; i < fieldValues.size(); i++) {
-            DumpUtil.dump(level + 1, "fields[" + i + "]: " + fieldValues.get(i).nameToken.name);
-            DumpUtil.dump(level + 1, "expr");
-            fieldValues.get(i).expr.dump(level + 2);
-        }
+        DumpUtil.dump(level, this);
     }
 
     public static class ObjectField {

@@ -18,12 +18,7 @@ public class MulOrDivExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "MulOrDivExpr");
-        DumpUtil.dump(level + 1, "operator: " + operator.name());
-        DumpUtil.dump(level + 1, "left expr");
-        leftExpr.dump(level + 2);
-        DumpUtil.dump(level + 1, "right expr");
-        rightExpr.dump(level + 2);
+        DumpUtil.dump(level, this);
     }
 
     @Override

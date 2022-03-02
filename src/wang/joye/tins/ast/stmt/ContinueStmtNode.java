@@ -11,7 +11,7 @@ public class ContinueStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "continue");
+        DumpUtil.dump(level, this);
     }
 
     @Override

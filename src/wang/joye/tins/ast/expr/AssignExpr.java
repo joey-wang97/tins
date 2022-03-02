@@ -19,11 +19,7 @@ public class AssignExpr extends ExprNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "Assign Expr: "+ operator.name());
-        DumpUtil.dump(level+1, "left Expr");
-        leftExpr.dump(level+2);
-        DumpUtil.dump(level+1, "right Expr");
-        rightExpr.dump(level+2);
+        DumpUtil.dump(level, this);
     }
 
     @Override

@@ -11,7 +11,7 @@ public class EmptyStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "EMPTY");
+        DumpUtil.dump(level, this);
     }
 
     @Override

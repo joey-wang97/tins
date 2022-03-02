@@ -18,8 +18,7 @@ public class SwitchStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level);
-        System.out.println();
+        DumpUtil.dump(level, this);
     }
 
     @Override

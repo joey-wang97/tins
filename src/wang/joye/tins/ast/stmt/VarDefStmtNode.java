@@ -20,8 +20,7 @@ public class VarDefStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "var defs:");
-        varDefNodes.forEach(i -> i.dump(level + 1));
+        DumpUtil.dump(level, this);
     }
 
     @Override

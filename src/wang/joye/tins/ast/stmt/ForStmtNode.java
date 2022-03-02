@@ -16,21 +16,7 @@ public class ForStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "For stmt");
-        DumpUtil.dump(level + 1, "init expr");
-        if (init != null) {
-            init.dump(level + 2);
-        }
-        DumpUtil.dump(level + 1, "condition");
-        if (condition != null) {
-            condition.dump(level + 2);
-        }
-        DumpUtil.dump(level + 1, "operation");
-        if (operation != null) {
-            operation.dump(level + 2);
-        }
-        DumpUtil.dump(level + 1, "stmt");
-        stmt.dump(level + 2);
+        DumpUtil.dump(level, this);
     }
     @Override
     public void check(ASTVisitor visitor) {

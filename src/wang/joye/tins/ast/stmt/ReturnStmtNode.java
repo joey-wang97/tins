@@ -18,10 +18,7 @@ public class ReturnStmtNode extends StmtNode {
 
     @Override
     public void dump(int level) {
-        DumpUtil.dump(level, "return");
-        if (expr != null) {
-            expr.dump(level + 1);
-        }
+        DumpUtil.dump(level,this);
     }
 
     @Override
