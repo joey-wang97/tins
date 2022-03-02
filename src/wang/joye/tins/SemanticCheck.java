@@ -266,8 +266,8 @@ public class SemanticCheck implements ASTVisitor {
         if (!sameExprType(leftType, rightType)) {
             ErrorUtil.error(left.getLine(), "assign expr type mismatch");
         }
-        left.visit(this);
-        right.visit(this);
+        left.check(this);
+        right.check(this);
     }
 
     /**
@@ -423,7 +423,7 @@ public class SemanticCheck implements ASTVisitor {
         tempScope.parent = currScope;
         currScope = tempScope;
         for (StmtNode stmt : compoundStmt.stmts) {
-            stmt.visit(this);
+            stmt.check(this);
         }
     }
 

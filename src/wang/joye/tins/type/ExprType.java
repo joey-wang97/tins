@@ -30,17 +30,17 @@ public class ExprType {
     }
 
     public static ExprType convert2ExprType(Token token) {
-        if (token.type == Token.Type.INT)
+        if (token.type == Token.Type.INT) {
             return new ExprType(Type.INT);
-        else if (token.type == Token.Type.STRING)
+        } else if (token.type == Token.Type.STRING) {
             return new ExprType(Type.STRING);
-        else if (token.type == Token.Type.CHAR)
+        } else if (token.type == Token.Type.CHAR) {
             return new ExprType(Type.CHAR);
-        else if (token.type == Token.Type.DOUBLE)
+        } else if (token.type == Token.Type.DOUBLE) {
             return new ExprType(Type.DOUBLE);
-        else if (token.type == Token.Type.FLOAT)
+        } else if (token.type == Token.Type.FLOAT) {
             return new ExprType(Type.FLOAT);
-        else if (token.type == Token.Type.IDENTIFIER) {
+        } else if (token.type == Token.Type.IDENTIFIER) {
             // 检查符号表中是否有符号
             VarDefNode varDef = SemanticCheck.currScope.get(token.name);
             if (varDef == null) {

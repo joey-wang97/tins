@@ -3,7 +3,6 @@ package wang.joye.tins.ast.expr;
 import wang.joye.tins.ast.node.ExprNode;
 import wang.joye.tins.type.ExprType;
 import wang.joye.tins.util.DumpUtil;
-import wang.joye.tins.util.ErrorUtil;
 import wang.joye.tins.visitor.ASTVisitor;
 
 public class BitOrExpr extends ExprNode {
@@ -32,12 +31,7 @@ public class BitOrExpr extends ExprNode {
     public ExprType getType() {
         int lw = leftExpr.getType().getWeight();
         int rw = rightExpr.getType().getWeight();
-        String leftTypeName = leftExpr.getType().getName();
-        String rightTypeName = leftExpr.getType().getName();
-        if (lw < 0 || rw < 0) {
-            ErrorUtil.error(getLine(), leftTypeName + "与" + rightTypeName + "不能进行按位与操作");
-        }
-        return leftExpr.getType();
+        return lw > rw ? leftExpr.getType() : rightExpr.getType();
     }
 
     @Override

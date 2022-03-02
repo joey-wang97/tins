@@ -28,7 +28,7 @@ public class FactorExpr extends ExprNode {
     }
 
     @Override
-    public void visit(ASTVisitor visitor) {
+    public void check(ASTVisitor visitor) {
         visitor.visit(this);
     }
 

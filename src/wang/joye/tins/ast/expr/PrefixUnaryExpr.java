@@ -33,4 +33,9 @@ public class PrefixUnaryExpr extends ExprNode {
     public ExprType getType() {
         return ExprTypeVisitor.getType(this);
     }
+
+    @Override
+    public int getLine() {
+        return operator.line;
+    }
 }
