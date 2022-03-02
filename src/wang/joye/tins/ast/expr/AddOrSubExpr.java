@@ -32,7 +32,12 @@ public class AddOrSubExpr extends ExprNode {
     }
 
     @Override
-    public ExprType type() {
+    public ExprType getType() {
         return null;
+    }
+
+    @Override
+    public int getLine() {
+        return leftExpr.getLine();
     }
 }

@@ -13,7 +13,12 @@ public class ExprType {
     // 数组维度
     public int arrDimension;
 
-    public ExprType() {
+    public int getWeight() {
+        return type.weight;
+    }
+
+    public String getName() {
+        return type.name();
     }
 
     public ExprType(Type type) {
@@ -49,15 +54,30 @@ public class ExprType {
             ErrorUtil.error("symbol " + token.name + " can't convert to ExprType");
         }
         ErrorUtil.error("can't convert " + token.type.name() + " to ExprType");
+        return null;
     }
 
+    /**
+     * 表达式类型枚举
+     */
     public enum Type {
-        INT,
-        LONG,
-        STRING,
-        CHAR,
-        DOUBLE,
-        FLOAT,
-        STRUCT,
+        INT(1),
+        LONG(3),
+        STRING(5),
+        CHAR(1),
+        DOUBLE(4),
+        FLOAT(2),
+        STRUCT(-1);
+
+        /**
+         * 表达式类型的权重，越高的权重越优先
+         * 权重用来做运算
+         * 负数权重代表不能用来进行某些运算，如按位与、按位或
+         */
+        private final int weight = 0;
+
+        Type(int weight) {
+
+        }
     }
 }

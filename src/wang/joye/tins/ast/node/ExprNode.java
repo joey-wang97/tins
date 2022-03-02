@@ -10,7 +10,7 @@ public abstract class ExprNode extends Node {
     /**
      * 返回表达式类型
      */
-    public abstract ExprType type();
+    public abstract ExprType getType();
 
     public abstract int getLine();
 }

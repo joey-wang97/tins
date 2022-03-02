@@ -11,34 +11,34 @@ import wang.joye.tins.util.ErrorUtil;
 public class ExprTypeVisitor {
 
     public static ExprType getType(ExprNode exprNode) {
-        return exprNode.type();
+        return exprNode.getType();
     }
 
     public static ExprType getType(AssignExpr assignExpr) {
-        return assignExpr.leftExpr.type();
+        return assignExpr.leftExpr.getType();
     }
 
     public static ExprType getType(AddOrSubExpr expr) {
-        return expr.leftExpr.type();
+        return expr.leftExpr.getType();
     }
 
     public static ExprType getType(ArrExpr expr) {
         if (expr.exprs.size() > 0)
-            return expr.exprs.get(0).type();
+            return expr.exprs.get(0).getType();
         ErrorUtil.error(expr.getLine(), "ArrExpr is empty");
         return null;
     }
 
     public static ExprType getType(BitAndExpr expr) {
-        return expr.leftExpr.type();
+        return expr.leftExpr.getType();
     }
 
     public static ExprType getType(BitOrExpr expr) {
-        return expr.leftExpr.type();
+        return expr.leftExpr.getType();
     }
 
     public static ExprType getType(BitXorExpr expr) {
-        return expr.leftExpr.type();
+        return expr.leftExpr.getType();
     }
 
     public static ExprType getType(CastExpr expr) {
@@ -46,15 +46,15 @@ public class ExprTypeVisitor {
     }
 
     public static ExprType getType(CondExpr expr) {
-        return expr.trueExpr.type();
+        return expr.trueExpr.getType();
     }
 
     public static ExprType getType(EqualityExpr expr) {
-        return expr.leftExpr.type();
+        return expr.leftExpr.getType();
     }
 
     public static ExprType getType(FactorExpr expr) {
-        ExprType exprType = expr.expr.type();
+        ExprType exprType = expr.expr.getType();
         // 如果有表达式：a.b.c
         // 则先取出a的类型，根据a的类型，得到属性b的类型
         // 根据a.b的类型，得到属性c的类型
@@ -71,7 +71,7 @@ public class ExprTypeVisitor {
             }
             // 这里必须用expr.nextFactor.expr，不能用expr.nextFactor.type()
             // 对于a.b.c来说，接下来计算的是b的type, 而不是b.c的type
-            ExprType nextType = expr.nextFactor.expr.type();
+            ExprType nextType = expr.nextFactor.expr.getType();
             for (VarDefNode fieldDef : def.fieldDefs) {
                 if (fieldDef.varNameToken.name.equals(nextType.structName)) {
 
@@ -103,28 +103,30 @@ public class ExprTypeVisitor {
             }
         }
 
+        // TODO
+        return null;
     }
 
-    void visit(FactorExpr expr);
+    void visit(FactorExpr expr){}
 
-    void visit(LogicAndExpr expr);
+    void visit(LogicAndExpr expr){}
 
-    void visit(LogicOrExpr expr);
+    void visit(LogicOrExpr expr){}
 
-    void visit(MulOrDivExpr expr);
+    void visit(MulOrDivExpr expr){}
 
-    void visit(ParenthesisExpr expr);
+    void visit(ParenthesisExpr expr){}
 
-    void visit(PrefixUnaryExpr expr);
+    void visit(PrefixUnaryExpr expr){}
 
-    void visit(PrimaryExpr expr);
+    void visit(PrimaryExpr expr){}
 
-    void visit(RelationExpr expr);
+    void visit(RelationExpr expr){}
 
-    void visit(ShiftExpr expr);
+    void visit(ShiftExpr expr){}
 
-    void visit(StructAssignExpr expr);
+    void visit(StructAssignExpr expr){}
 
-    void visit(SuffixUnaryExpr expr);
+    void visit(SuffixUnaryExpr expr){}
 
 }

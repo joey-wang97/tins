@@ -1,5 +1,5 @@
 ## introduction
-A developing compiler based Java named "tins"
+A developing compiler based Java11 named "tins"
 
 ## todo list
 

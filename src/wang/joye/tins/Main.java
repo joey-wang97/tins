@@ -12,7 +12,7 @@ public class Main {
 
     public static void main(String[] args) {
         String testFile = "sample/simple1.tins";
-        // testLexer("sample/lexer.test");
+        testLexer("sample/lexer.test");
         // testParser(testFile);
         // testPreParser(testFile);
     }
@@ -25,7 +25,7 @@ public class Main {
         System.out.println(lexer.peek().type.name());
         System.out.println(lexer.lookAhead(1).type.name());*/
         while (token.type != Token.Type.END) {
-            System.out.println(token.toString());
+            System.out.println(token);
             token = lexer.next();
         }
     }

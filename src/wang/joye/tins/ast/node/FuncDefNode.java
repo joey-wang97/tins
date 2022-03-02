@@ -22,6 +22,7 @@ public class FuncDefNode extends Node {
     public List<FuncParamNode> paramNode;
     public CompoundStmtNode bodyStmt;
 
+    @Override
     public void dump(int level) {
         String funcTypeName = funcTypeToken.name == null ? funcTypeToken.type.name() : funcTypeToken.name;
 
@@ -34,7 +35,7 @@ public class FuncDefNode extends Node {
     }
 
     @Override
-    public void visit(ASTVisitor visitor) {
+    public void check(ASTVisitor visitor) {
         visitor.visit(this);
     }
 }

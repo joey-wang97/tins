@@ -30,7 +30,12 @@ public class CastExpr extends ExprNode {
     }
 
     @Override
-    public ExprType type() {
+    public ExprType getType() {
         return ExprTypeVisitor.getType(this);
+    }
+
+    @Override
+    public int getLine() {
+        return castType.line;
     }
 }

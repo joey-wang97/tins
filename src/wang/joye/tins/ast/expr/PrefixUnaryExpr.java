@@ -30,7 +30,7 @@ public class PrefixUnaryExpr extends ExprNode {
     }
 
     @Override
-    public ExprType type() {
+    public ExprType getType() {
         return ExprTypeVisitor.getType(this);
     }
 }

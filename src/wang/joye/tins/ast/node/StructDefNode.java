@@ -31,7 +31,7 @@ public class StructDefNode extends Node {
     }
 
     @Override
-    public void visit(ASTVisitor visitor) {
+    public void check(ASTVisitor visitor) {
         visitor.visit(this);
     }
 }

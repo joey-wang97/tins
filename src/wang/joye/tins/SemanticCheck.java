@@ -19,7 +19,7 @@ public class SemanticCheck implements ASTVisitor {
     public static AST globalAst = null;
 
     // 所有struct的名字
-    private static List<String> structNames = new ArrayList<>();
+    private static final List<String> structNames = new ArrayList<>();
     public static Scope currScope = new Scope();
 
     public void check(AST ast) {
@@ -232,9 +232,7 @@ public class SemanticCheck implements ASTVisitor {
                 if (!checkStmtReturnType(type, elseIfStmt.stmt, isArr))
                     return false;
             }
-            if (ifStmtNode.elseStmt != null && !checkStmtReturnType(type, ifStmtNode.elseStmt, isArr))
-                return false;
-            return true;
+            return ifStmtNode.elseStmt == null || checkStmtReturnType(type, ifStmtNode.elseStmt, isArr);
         }
         if (stmt instanceof ForStmtNode) {
             ForStmtNode forStmtNode = (ForStmtNode) stmt;
@@ -250,9 +248,9 @@ public class SemanticCheck implements ASTVisitor {
 
     @Override
     public void visit(ArrExpr expr) {
-        ExprType firstType = expr.exprs.get(0).type();
+        ExprType firstType = expr.exprs.get(0).getType();
         for (int i = 1; i < expr.exprs.size(); i++) {
-            ExprType curType = expr.exprs.get(i).type();
+            ExprType curType = expr.exprs.get(i).getType();
             if (!sameExprType(firstType, curType))
                 ErrorUtil.error(expr.getLine(), "arr expr type mismatch");
         }
@@ -276,8 +274,8 @@ public class SemanticCheck implements ASTVisitor {
      * 一个表达式必须为整型：int或long
      */
     private void mustBeInteger(ExprNode expr) {
-        if (expr.type().type != ExprType.Type.INT
-                && expr.type().type != ExprType.Type.LONG) {
+        if (expr.getType().type != ExprType.Type.INT
+                && expr.getType().type != ExprType.Type.LONG) {
             ErrorUtil.error(expr.getLine(), "expr type must be int");
         }
     }
@@ -286,9 +284,9 @@ public class SemanticCheck implements ASTVisitor {
      * 必须为基本类型: int/long/float/double
      */
     private void mustBeSimpleType(ExprNode expr) {
-        if (expr.type().arrDimension > 0
-                || expr.type().type == ExprType.Type.STRUCT
-                || expr.type().type != ExprType.Type.STRING) {
+        if (expr.getType().arrDimension > 0
+                || expr.getType().type == ExprType.Type.STRUCT
+                || expr.getType().type != ExprType.Type.STRING) {
             ErrorUtil.error(expr.getLine(), "expr type must not be string or struct");
         }
     }
@@ -495,7 +493,7 @@ public class SemanticCheck implements ASTVisitor {
      * TODO 暂时只支持一维数组
      */
     public static void checkMatch(Token token, ExprNode exprNode, boolean isArr) {
-        ExprType exprType = exprNode.type();
+        ExprType exprType = exprNode.getType();
         switch (exprType.type) {
             case INT:
                 if (token.type != Token.Type.INT)
@@ -527,7 +525,7 @@ public class SemanticCheck implements ASTVisitor {
                 break;
         }
         // 判断两个是不是都是数组类型，或者都不是，所以用异或
-        if (isArr ^ exprNode.type().arrDimension > 0) {
+        if (isArr ^ exprNode.getType().arrDimension > 0) {
             ErrorUtil.error(token.line, "arr type mismatch");
         }
     }
@@ -541,11 +539,9 @@ public class SemanticCheck implements ASTVisitor {
         if (type1.type == type2.type && type1.type != ExprType.Type.STRUCT)
             return true;
         // 如果是同一结构体类型
-        if (type1.type == ExprType.Type.STRUCT
+        return type1.type == ExprType.Type.STRUCT
                 && type2.type == ExprType.Type.STRUCT
-                && type1.structName.equals(type2.structName))
-            return true;
-        return false;
+                && type1.structName.equals(type2.structName);
     }
 
 }
