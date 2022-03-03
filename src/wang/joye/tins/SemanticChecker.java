@@ -329,7 +329,7 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(CondExpr expr) {
-        // TODO
+        mustBeInteger(expr.cond);
     }
 
     @Override
@@ -346,7 +346,19 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(FactorExpr expr) {
-        // TODO check
+        if (expr == null)
+            return;
+        // 检查数组维度
+        ExprType type = expr.expr.getType();
+        if (expr.arrIndexList != null && expr.arrIndexList.size() > 0) {
+            if (type.arrDimension != expr.arrIndexList.size()) {
+                ErrorUtil.error(expr.getLine(), "数组维度不同");
+            }
+        }
+        // 无法确定FactorExpr的具体类型，调用子类的检查方法
+        expr.check(this);
+        // 检查点号之后的表达式
+        visit(expr.nextFactor);
     }
 
     @Override
@@ -372,7 +384,8 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(ParenthesisExpr expr) {
-
+        // 只检查括号内的表达式
+        expr.expr.check(this);
     }
 
     @Override
@@ -382,7 +395,7 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(PrimaryExpr expr) {
-
+        // ignore 此表达式不需要检查
     }
 
     @Override

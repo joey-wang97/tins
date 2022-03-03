@@ -6,6 +6,9 @@ import wang.joye.tins.util.DumpUtil;
 import wang.joye.tins.visitor.ASTVisitor;
 import wang.joye.tins.visitor.ExprTypeVisitor;
 
+/**
+ * 条件表达式
+ */
 public class CondExpr extends ExprNode {
     public ExprNode cond, trueExpr, falseExpr;
 
