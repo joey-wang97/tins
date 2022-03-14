@@ -111,7 +111,9 @@ public class SemanticChecker implements ASTVisitor {
             checkStructDef(varDef);
         }
         // 检查左值和右值是否匹配
-        checkMatch(varDef.varTypeToken, varDef.value, varDef.eachDimensionLength.size() > 0);
+        if (varDef.value != null) {
+            checkMatch(varDef.varTypeToken, varDef.value, varDef.eachDimensionLength.size() > 0);
+        }
     }
 
     private void checkArrDef(VarDefNode varDef) {
@@ -354,9 +356,13 @@ public class SemanticChecker implements ASTVisitor {
             if (type.arrDimension != expr.arrIndexList.size()) {
                 ErrorUtil.error(expr.getLine(), "数组维度不同");
             }
+            // 检查维度是否整型
+            for (ExprNode exprNode : expr.arrIndexList) {
+                mustBeInteger(exprNode);
+            }
         }
         // 无法确定FactorExpr的具体类型，调用子类的检查方法
-        expr.check(this);
+        expr.expr.check(this);
         // 检查点号之后的表达式
         visit(expr.nextFactor);
     }

@@ -14,8 +14,9 @@ public class Main {
     public static void main(String[] args) {
         String testFile = "sample/simple1.tins";
         // testLexer("sample/lexer.test");
-        testParser(testFile);
+        // testParser(testFile);
         // testPreParser(testFile);
+        testSemanticCheck(testFile);
     }
 
     public static void testLexer(String fileName) {

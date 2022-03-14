@@ -5,7 +5,7 @@ import wang.joye.tins.ast.node.VarDefNode;
 import wang.joye.tins.util.ErrorUtil;
 
 /**
- * 词法单元
+ * 表达式类型
  */
 public class ExprType {
     public Type type;
@@ -46,12 +46,15 @@ public class ExprType {
             if (varDef == null) {
                 ErrorUtil.error("can't find " + token.name + "symbol in table");
             }
+            // 如果它是个结构体类型
             if (varDef.varTypeToken.type == Token.Type.STRUCT) {
                 ExprType type = new ExprType(Type.STRUCT);
                 type.structName = token.name;
                 return type;
+            } else {
+                // 不是结构体，代表是普通变量定义，将变量的类型token转化为ExprType
+                return convert2ExprType(varDef.varTypeToken);
             }
-            ErrorUtil.error("symbol " + token.name + " can't convert to ExprType");
         }
         ErrorUtil.error("can't convert " + token.type.name() + " to ExprType");
         return null;
@@ -74,10 +77,10 @@ public class ExprType {
          * 权重用来做运算
          * 负数权重代表不能用来进行某些运算，如按位与、按位或
          */
-        private final int weight = 0;
+        private int weight = 0;
 
         Type(int weight) {
-
+            this.weight = weight;
         }
     }
 }
